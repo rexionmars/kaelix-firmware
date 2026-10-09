@@ -58,7 +58,6 @@ KLIB = pathlib.Path("/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbol
 # versão dependa de arquivo que mora na outra.
 VERSAO = os.environ.get("KAELIX_PCB", "v1")
 OUT = pathlib.Path(__file__).resolve().parent / "pcb" / VERSAO
-OUT.mkdir(parents=True, exist_ok=True)
 ROOT_UUID = "b7c1e2a0-0000-4000-8000-000000000000"
 PROJ = "kaelix"
 
@@ -466,70 +465,76 @@ def coloca(ref, libname, symname, fp, valor, x, y, mapa):
                   [sym("uuid"), st(uid())]])
 
 
-for ref, lb, sn, fp, val, x, y, mapa in COMPONENTES:
-    coloca(ref, lb, sn, fp, val, x, y, mapa)
-for ref, sn, fp, val, x, y, n1, n2 in PASSIVOS:
-    coloca(ref, "Device", sn, fp, val, x, y, {"1": n1, "2": n2})
-for ref, lb, sn, fp, val, x, y, mapa in EXTRAS:
-    coloca(ref, lb, sn, fp, val, x, y, mapa)
-for i, (net, x, y) in enumerate(PWR_FLAGS, 1):
-    coloca(f"#FLG{i}", "power", "PWR_FLAG", "", "PWR_FLAG", x, y, {"1": net})
+def main():
+    OUT.mkdir(parents=True, exist_ok=True)
+    for ref, lb, sn, fp, val, x, y, mapa in COMPONENTES:
+        coloca(ref, lb, sn, fp, val, x, y, mapa)
+    for ref, sn, fp, val, x, y, n1, n2 in PASSIVOS:
+        coloca(ref, "Device", sn, fp, val, x, y, {"1": n1, "2": n2})
+    for ref, lb, sn, fp, val, x, y, mapa in EXTRAS:
+        coloca(ref, lb, sn, fp, val, x, y, mapa)
+    for i, (net, x, y) in enumerate(PWR_FLAGS, 1):
+        coloca(f"#FLG{i}", "power", "PWR_FLAG", "", "PWR_FLAG", x, y, {"1": net})
 
-doc = [sym("kicad_sch"), [sym("version"), sym("20231120")], [sym("generator"), st("kaelix_gen")],
-       [sym("uuid"), st(ROOT_UUID)], [sym("paper"), st("A2")],
-       [sym("lib_symbols")] + list(LIBSYMS.values())] + S + \
-      [[sym("sheet_instances"), [sym("path"), st("/"), [sym("page"), st("1")]]]]
+    doc = [sym("kicad_sch"), [sym("version"), sym("20231120")], [sym("generator"), st("kaelix_gen")],
+           [sym("uuid"), st(ROOT_UUID)], [sym("paper"), st("A2")],
+           [sym("lib_symbols")] + list(LIBSYMS.values())] + S + \
+          [[sym("sheet_instances"), [sym("path"), st("/"), [sym("page"), st("1")]]]]
 
-(OUT / "kaelix.kicad_sch").write_text(dump(doc) + "\n", encoding="utf-8")
+    (OUT / "kaelix.kicad_sch").write_text(dump(doc) + "\n", encoding="utf-8")
 
-# A biblioteca do símbolo próprio também sai daqui. Era o último arquivo
-# derivado mantido à mão: se `simbolo_ht7333()` mudasse e o .kicad_sym não,
-# o ERC acusaria lib_symbol_mismatch — melhor não haver o que divergir.
-_defn, _pins = simbolo_ht7333()
-_lib = [sym("kicad_symbol_lib"), [sym("version"), sym("20231120")],
-        [sym("generator"), st("kaelix_gen")],
-        [sym("symbol"), st("HT7333")] + [e for e in _defn[2:] if isinstance(e, list)]]
-(OUT / "kaelix.kicad_sym").write_text(dump(_lib) + "\n", encoding="utf-8")
+    # A biblioteca do símbolo próprio também sai daqui. Era o último arquivo
+    # derivado mantido à mão: se `simbolo_ht7333()` mudasse e o .kicad_sym não,
+    # o ERC acusaria lib_symbol_mismatch — melhor não haver o que divergir.
+    _defn, _pins = simbolo_ht7333()
+    _lib = [sym("kicad_symbol_lib"), [sym("version"), sym("20231120")],
+            [sym("generator"), st("kaelix_gen")],
+            [sym("symbol"), st("HT7333")] + [e for e in _defn[2:] if isinstance(e, list)]]
+    (OUT / "kaelix.kicad_sym").write_text(dump(_lib) + "\n", encoding="utf-8")
 
-# A tabela de bibliotecas mora ao lado do projeto e é o que faz o KiCad achar
-# o símbolo próprio. Com o projeto versionado por diretório ela precisa existir
-# em cada versão — gerada, não copiada, para não haver duas verdades.
-(OUT / "sym-lib-table").write_text(
-    '(sym_lib_table\n'
-    '  (version 7)\n'
-    '  (lib (name "kaelix")(type "KiCad")(uri "${KIPRJMOD}/kaelix.kicad_sym")'
-    '(options "")(descr "Símbolos próprios do Kaelix"))\n'
-    ')\n', encoding="utf-8")
-# Restrições de fabricação. Furo mínimo de 0,2 mm NÃO é folga para o DRC
-# passar: o footprint do WROOM-1U traz 12 vias térmicos de 0,2 mm sob o módulo.
-# Manter 0,3 mm exigiria editar o footprint; aceitar 0,2 mm exige casa que faça
-# furo de 0,2 mm, processo de custo extra. A decisão fica registrada aqui.
-#
-# A folga da netclass é 0,15 mm, e não os 0,2 mm herdados: o MPU6050 é um
-# QFN-24 de 0,5 mm de passo e, com 0,2 mm, o obstáculo inflado de um pad
-# cobre a linha de centro do pad vizinho e nenhum escape fecha. A derivação
-# está em hardware/router.py. 0,15 mm de folga com traço de 0,2 mm está
-# dentro do processo padrão de duas camadas.
-import json as _json
-_regras = {"min_through_hole_diameter": 0.2,
-           "min_hole_clearance": 0.25,
-           "min_hole_to_hole": 0.25,
-           "min_clearance": 0.15,
-           "min_track_width": 0.15,
-           "min_via_diameter": 0.4}
-_classe = {"name": "Default", "clearance": 0.15, "track_width": 0.2,
-           "via_diameter": 0.6, "via_drill": 0.3,
-           "microvia_diameter": 0.3, "microvia_drill": 0.1,
-           "diff_pair_gap": 0.25, "diff_pair_width": 0.2, "diff_pair_via_gap": 0.25,
-           "line_style": 0, "pcb_color": "rgba(0, 0, 0, 0.000)",
-           "schematic_color": "rgba(0, 0, 0, 0.000)",
-           "wire_width": 6, "bus_width": 12}
-_pro = {"board": {"design_settings": {"rules": _regras,
-                                      "track_widths": [0.0, 0.2],
-                                      "via_dimensions": [{"diameter": 0.0, "drill": 0.0},
-                                                         {"diameter": 0.6, "drill": 0.3}]}},
-        "net_settings": {"classes": [_classe], "meta": {"version": 3}},
-        "schematic": {},
-        "meta": {"filename": "kaelix.kicad_pro", "version": 1}}
-(OUT / "kaelix.kicad_pro").write_text(_json.dumps(_pro, indent=2) + "\n")
-print(f"gerado: {OUT}/kaelix.kicad_sch  ({len(S)} elementos, {len(LIBSYMS)} símbolos)")
+    # A tabela de bibliotecas mora ao lado do projeto e é o que faz o KiCad achar
+    # o símbolo próprio. Com o projeto versionado por diretório ela precisa existir
+    # em cada versão — gerada, não copiada, para não haver duas verdades.
+    (OUT / "sym-lib-table").write_text(
+        '(sym_lib_table\n'
+        '  (version 7)\n'
+        '  (lib (name "kaelix")(type "KiCad")(uri "${KIPRJMOD}/kaelix.kicad_sym")'
+        '(options "")(descr "Símbolos próprios do Kaelix"))\n'
+        ')\n', encoding="utf-8")
+    # Restrições de fabricação. Furo mínimo de 0,2 mm NÃO é folga para o DRC
+    # passar: o footprint do WROOM-1U traz 12 vias térmicos de 0,2 mm sob o módulo.
+    # Manter 0,3 mm exigiria editar o footprint; aceitar 0,2 mm exige casa que faça
+    # furo de 0,2 mm, processo de custo extra. A decisão fica registrada aqui.
+    #
+    # A folga da netclass é 0,15 mm, e não os 0,2 mm herdados: o MPU6050 é um
+    # QFN-24 de 0,5 mm de passo e, com 0,2 mm, o obstáculo inflado de um pad
+    # cobre a linha de centro do pad vizinho e nenhum escape fecha. A derivação
+    # está em hardware/router.py. 0,15 mm de folga com traço de 0,2 mm está
+    # dentro do processo padrão de duas camadas.
+    import json as _json
+    _regras = {"min_through_hole_diameter": 0.2,
+               "min_hole_clearance": 0.25,
+               "min_hole_to_hole": 0.25,
+               "min_clearance": 0.15,
+               "min_track_width": 0.15,
+               "min_via_diameter": 0.4}
+    _classe = {"name": "Default", "clearance": 0.15, "track_width": 0.2,
+               "via_diameter": 0.6, "via_drill": 0.3,
+               "microvia_diameter": 0.3, "microvia_drill": 0.1,
+               "diff_pair_gap": 0.25, "diff_pair_width": 0.2, "diff_pair_via_gap": 0.25,
+               "line_style": 0, "pcb_color": "rgba(0, 0, 0, 0.000)",
+               "schematic_color": "rgba(0, 0, 0, 0.000)",
+               "wire_width": 6, "bus_width": 12}
+    _pro = {"board": {"design_settings": {"rules": _regras,
+                                          "track_widths": [0.0, 0.2],
+                                          "via_dimensions": [{"diameter": 0.0, "drill": 0.0},
+                                                             {"diameter": 0.6, "drill": 0.3}]}},
+            "net_settings": {"classes": [_classe], "meta": {"version": 3}},
+            "schematic": {},
+            "meta": {"filename": "kaelix.kicad_pro", "version": 1}}
+    (OUT / "kaelix.kicad_pro").write_text(_json.dumps(_pro, indent=2) + "\n")
+    print(f"gerado: {OUT}/kaelix.kicad_sch  ({len(S)} elementos, {len(LIBSYMS)} símbolos)")
+
+
+if __name__ == "__main__":
+    main()

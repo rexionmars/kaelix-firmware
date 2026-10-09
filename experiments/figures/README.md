@@ -29,14 +29,28 @@ figures/output/*.{svg,pdf,tiff,png}    SVG/PDF vetoriais, TIFF 600 dpi
 | cálculo no próprio exportador | `export_topologia_data.py` | 5 |
 | **módulo `experiments/gateway/`** | `export_gateway_data.py` | 7 |
 | esquema, sem dado numérico | — | 6 |
-| **firmware** (`src/`, `lib/`) | — (desenho direto) | 8 |
+| **netlist v3** (`hardware/gen_schematic.py`) | KiCad CLI | 8 |
 
-**Figura 8 é a exceção do pipeline.** Um esquemático não tem CSV: os valores
-*são* o desenho. `fig8_circuito.py` gera SVG diretamente, com coordenadas
-absolutas, e cada constante traz no cabeçalho o arquivo e a linha do firmware de
-onde saiu (pinos, R_FIXED, correntes). Não usa R nem biblioteca de esquemático —
-`schemdraw` foi tentada e descartada: o posicionamento relativo dela fazia o
-rótulo do CI disputar espaço com os nomes dos pinos.
+**Figura 8 é a exceção do pipeline.** A prancha elétrica usa os símbolos da
+biblioteca do KiCad e a netlist v3 de `hardware/gen_schematic.py`, incluindo
+USB-C e BQ21040. O KiCad CLI exporta as três folhas; o adaptador recupera o
+texto editável do SVG e compõe margens e carimbo segundo o guia de plotagem.
+Não usa matplotlib. A composição em preto dispensa codificação por cor.
+
+`output/fig8_circuito.pdf` contém todas as folhas A3, na ordem alimentação/carga,
+controlador/rádio e sensores/corte. `fig8_circuito.svg` e `.png` são a primeira
+folha; as seguintes têm sufixos `_folha2` e `_folha3`. PNG a 300 dpi, PDF com
+Arial TrueType embutida e SVG com texto editável. Os esquemas de apresentação
+editáveis ficam em `hardware/pcb/v3/prancha/`; não são entradas para fabricar a
+PCB. A geração compara as 134 conexões exportadas pelo KiCad com a netlist de
+41 componentes e falha em caso de divergência.
+
+```bash
+uv run --no-project --with cairosvg --with pypdf python experiments/figures/scripts/fig8_circuito.py
+```
+
+Dependências: KiCad instalado (caminho padrão do macOS ou `kicad-cli` no PATH),
+Poppler (`pdftoppm` no PATH), Arial, CairoSVG e pypdf.
 
 **Nota sobre a fonte da verdade das figuras 5 e 7.** As figuras 1 a 4 têm a
 computação no notebook e reproduzida no exportador — duas cópias que podem
