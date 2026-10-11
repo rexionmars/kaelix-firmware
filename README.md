@@ -5,9 +5,98 @@ vibração e temperatura, roda um modelo de detecção de anomalias embarcado
 (TinyML) e transmite o resultado via LoRa. TCC de Engenharia de Software
 (ICEV), inspirado na arquitetura do TRACTIAN Smart Trac.
 
-O hardware físico ainda não foi montado. Todo o firmware e o pipeline de
-treino foram desenvolvidos e testados em simulador e dados offline, para que
-a integração com o hardware real seja só calibração quando ele chegar.
+O ESP32-S3, o MPU6050 e o RA-02 estão disponíveis e foram conectados
+em bancada. O NTC e o circuito de alimentação final ainda não estão montados.
+A aquisição real foi implementada; a validação na placa ainda está pendente.
+
+## Teste da montagem atual (USB, sem NTC)
+
+Use o ambiente **`esp32-s3-bench`** para esta montagem:
+
+```bash
+pio run -e esp32-s3-bench -t upload
+pio device monitor -e esp32-s3-bench -b 115200
+```
+
+Abra o monitor e pressione RESET/EN para acompanhar desde o início. O ambiente
+`esp32-s3` continua com NTC e deep sleep de 12 minutos; não é a configuração
+adequada para a montagem atual.
+
+O ambiente de bancada habilita `ARDUINO_USB_CDC_ON_BOOT=1`: as mensagens
+`[kaelix]` de `Serial` saem pelo USB Serial/JTAG nativo do S3. Sem essa
+opção, `Serial` usa UART0; ver apenas logs internos como `i2cInit()` no USB
+não demonstra que a execução parou no I²C. Se usar um conversor USB–UART,
+os logs da aplicação devem ser acompanhados no USB nativo nesta configuração.
+
+Os logs da aplicação no S3 e no C3 incluem tempo desde o boot e marcadores:
+`[+00:00:12.345][gateway][INFO][RX] RX ... crc=OK`.
+Os níveis são `INFO`, `DEBUG`, `WARN` e `ERROR`; os eventos identificam
+`BOOT`, `CONFIG`, `PHASE`, `IMU`, `MEASURE`, `RADIO`, `TX`, `RX`, `IRQ`,
+`HEALTH`, `SPI`, `REJECT` e `CYCLE`. O prefixo `+` indica tempo de execução,
+não horário civil: cada placa tem sua própria origem, reiniciada no boot.
+Para carimbar com o horário do computador e salvar o ensaio, use os filtros
+`-f time -f log2file` no monitor. O diagnóstico bruto RadioLib está desativado
+por padrão no ambiente de bancada; pode ser reativado pelos flags
+`RADIOLIB_DEBUG_BASIC` e `RADIOLIB_DEBUG_SPI` em `platformio.ini`.
+
+O driver aceita MPU6050 (`WHO_AM_I=0x68`) e MPU6515 (`0x74`). A placa
+conectada devolveu `0x74`, compatível com MPU6515; confirmar a marcação física
+antes de atualizar o hardware do TCC. O perfil MPU6515 usa `ACCEL_CONFIG2`
+e FIFO de 512 bytes, conforme o [driver do Linux](https://github.com/torvalds/linux/blob/master/drivers/iio/imu/inv_mpu6050/inv_mpu_core.c).
+
+A bancada lê 512 amostras do eixo Z pelo FIFO, drenado continuamente, com relógio de
+1 kHz, escala ±4 g e DLPF de 184 Hz. Aceleração em **g**, com a média da
+janela removida (gravidade/bias), e estimativa de taxa por observação do FIFO.
+Essa estimativa não substitui uma medição com instrumento externo. A janela
+é descartada em erro de I2C, timeout, overflow, clipping ou desvio de taxa >2%.
+Posicione o eixo Z na direção de vibração que deseja observar. A filtragem
+reduz conteúdo de alta frequência; a banda útil não corresponde a 0–500 Hz
+com resposta plana e precisa ser considerada na validação do modelo.
+
+O log mostra `vib_init`, `vib_read`, taxa, média de Z e os quatro indicadores.
+O pacote mantém temperatura `NaN`, estado `UNKNOWN` e sequência por ciclo.
+O modelo não é executado na bancada: unidade em g é compatível com o pipeline,
+mas resposta do sensor, montagem e remoção da média precisam ser validadas
+antes de tratar o modelo MAFAULDA como diagnóstico desse motor.
+
+O LoRa usa SCK=12, MISO=13, MOSI=11, CS=10, RESET=21 e DIO0=14, SPI a
+100 kHz e potência de bancada de 2 dBm. Cada ciclo transmite uma vez, coloca
+o rádio em sono e espera 10 segundos, sem deep sleep nem controle do GPIO5.
+Mantenha a antena conectada. `lora raw_spi_100k` mostra a leitura direta de RegVersion a 100 kHz para
+comparação com o RadioLib; a versão esperada do SX1278 é `0x12`.
+`radiolib begin=` e `radiolib tx=` mostram o
+retorno original; **`tx=-16` significa que a leitura de um registrador não
+correspondeu ao valor escrito**, não uma prova de ausência total de SPI.
+O ambiente de bancada habilita `RADIOLIB_DEBUG_BASIC/SPI` para mostrar
+o endereço, valor escrito e valor lido quando uma verificação falha.
+Esses logs alteram o tempo de execução e servem somente ao diagnóstico.
+`tx=0` indica conclusão local; a recepção exige outro rádio compatível.
+
+## Receptor no ESP32-C3 Super Mini
+
+O segundo RA-02 pode receber os pacotes do S3 usando o ambiente
+`esp32-c3-receiver`. Ligações, gravação e saída esperada estão em
+[src/receiver/README.md](src/receiver/README.md). Esse receptor valida o
+pacote v2 de 21 bytes; o gateway Python antigo usa outro formato.
+
+## Diagnóstico isolado do LoRa
+
+Se a versão continuar `0x00`, use o firmware de leitura isolada:
+
+```bash
+pio run -e lora-probe -t upload
+pio device monitor -e lora-probe -b 115200
+```
+
+Pressione RESET/EN com o monitor aberto. Esse ambiente não executa RadioLib,
+I2C, modelo nem transmissão. Lê RegVersion por GPIO (SPI por software,
+modo 0) e por uma instância FSPI a 100 kHz e 1 MHz. Também confere se o
+periférico SPI foi inicializado. A versão esperada é `0x12`.
+Se GPIO funciona e hardware SPI falha, investigar configuração/periférico SPI;
+se ambos funcionam, investigar integração com o restante do firmware.
+Se ambos falham, os resultados ainda exigem conferir os sinais, alimentação,
+reset e identificação física do módulo; não comprovam defeito do rádio.
+Volte à bancada enviando `esp32-s3-bench` após o diagnóstico.
 
 ## Hardware alvo
 
@@ -26,7 +115,7 @@ a integração com o hardware real seja só calibração quando ele chegar.
 
 | Uso | Pino | Observação |
 |---|---|---|
-| I2C (MPU6050) | SDA=8, SCL=9 | *default* da placa — ainda não usado (I2C real é TODO) |
+| I2C (MPU6050) | SDA=8, SCL=9 | explícitos no driver; AD0 em GND (`0x68`) |
 | SPI (LoRa) | MOSI=11, MISO=13, SCK=12, SS=10 | *default* da placa |
 | LoRa DIO0 | 14 | escolhido para não colidir com I2C |
 | LoRa RESET | 21 | escolhido para não colidir com I2C |
@@ -41,7 +130,7 @@ Conferidos sem conflito entre si e contra o `pins_arduino.h` real da variante
 `esptool`: QFN56 revisão v0.2, 16 MB de flash, 8 MB de PSRAM embarcada. Confirma a
 variante N16R8 que o `platformio.ini` declara — e portanto a necessidade de
 sobrescrever o perfil da `devkitc-1`, que declara 8 MB de flash e nenhuma PSRAM.
-Os demais componentes (MPU6050, NTC, SX1278) continuam não montados.
+MPU6050 e SX1278 conectados em bancada; NTC ainda ausente.
 
 ## O ciclo
 
@@ -75,9 +164,8 @@ dividida em duas camadas:
   fala com o hardware de verdade e chama as funções de `lib/`.
 
 Foi isso que permitiu desenvolver e validar a maior parte da lógica sem ter
-o ESP32-S3, o MPU6050 ou o RA-02 em mãos. Quando o hardware chegar, só a
-camada `src/` muda — trocar buffers zerados por leituras reais — porque a
-matemática já está testada.
+o ESP32-S3, o MPU6050 ou o RA-02 em mãos. A aquisição real fica na camada `src/`; a matemática continua separada
+e testável no host.
 
 ## FFT própria em vez de `arduinoFFT`
 
@@ -410,8 +498,8 @@ boot seguinte, porque o hold sobrevive ao reset e travaria o pino.
 | Watchdog RTC (WDT-1) no ESP32-S3 | ✅ Via `hal/wdt_hal.h`; armado e linkado, comportamento não medido |
 | Gateway ↔ firmware na mesma versão de pacote | ❌ Gateway em v1/20 B, firmware em v2/21 B |
 | Simulação Wokwi | 🟡 Arquivo pronto; só ESP32+MPU6050, sem NTC nem rádio |
-| Leitura I2C real do MPU6050 + DLPF | ⬜ Bloqueado — precisa do hardware físico |
-| Calibração física, consumo real, alcance LoRa | ⬜ Bloqueado — precisa do hardware físico |
+| Leitura I2C real do MPU6050 + DLPF | 🟡 Implementada com FIFO; validação física pendente |
+| Calibração física, consumo real, alcance LoRa | ⬜ Pendente; alcance exige receptor |
 
 ## O que o modelo detecta
 
@@ -451,7 +539,7 @@ kaelix-firmware/
 │
 ├── src/                # camada que fala com o hardware
 │   ├── main.cpp          # ciclo principal
-│   ├── sensors/          # vibração (I2C, TODO) e temperatura (ADC)
+│   ├── sensors/          # vibração (I2C/FIFO) e temperatura (ADC)
 │   ├── ml/               # integração do modelo de detecção de anomalias
 │   ├── comms/            # empacotamento e envio LoRa
 │   └── power/            # deep sleep e corte de energia

@@ -5,6 +5,7 @@
 #include "power/watchdog.h"
 #include "sensors/temperature.h"
 #include "sensors/vibration.h"
+#include "serial_log.h"
 
 #include "crc16.h"
 #include "kaelix_status.h"
@@ -48,6 +49,13 @@ using kaelix::Status;
 #  else
 #    define KAELIX_LOG_SERIAL 1
 #  endif
+#endif
+
+#ifndef KAELIX_BENCH
+#define KAELIX_BENCH 0
+#endif
+#ifndef KAELIX_HAS_NTC
+#define KAELIX_HAS_NTC 1
 #endif
 
 namespace {
@@ -195,19 +203,14 @@ Status retained_load(bool power_on) {
 
 #if KAELIX_LOG_SERIAL
 void log_phase(const char* phase, Status status) {
-    Serial.print("[kaelix] ");
-    Serial.print(phase);
-    Serial.print(' ');
-    Serial.println(kaelix::status_to_string(status));
+    kaelix::logging::log("kaelix", kaelix::is_ok(status) ? "INFO" : "ERROR",
+        "PHASE", "%s %s", phase, kaelix::status_to_string(status));
 }
 
 void log_cycle(Status status, MachineState state, uint32_t boot_count) {
-    Serial.print("[kaelix] cycle ");
-    Serial.print(kaelix::status_to_string(status));
-    Serial.print(' ');
-    Serial.print(kaelix::machine_state_to_string(state));
-    Serial.print(" boot=");
-    Serial.println(boot_count);
+    kaelix::logging::log("kaelix", kaelix::is_ok(status) ? "INFO" : "ERROR",
+        "CYCLE", "cycle %s %s boot=%lu", kaelix::status_to_string(status),
+        kaelix::machine_state_to_string(state), static_cast<unsigned long>(boot_count));
     // Sem flush, a UART é cortada no meio da última linha pelo deep
     // sleep — justamente a linha que diz por que o ciclo terminou assim.
     Serial.flush();
@@ -266,6 +269,7 @@ Status feed_watchdog(Status accumulated) {
 
 } // namespace
 
+#if !KAELIX_BENCH
 void setup() {
 #if KAELIX_LOG_SERIAL
     Serial.begin(115200);
@@ -348,6 +352,7 @@ void setup() {
         cycle = kaelix::status_first_error(cycle, vibration);
         cycle = feed_watchdog(cycle);
 
+#if KAELIX_HAS_NTC
         Status temperature = ksens::temperature_init();
         if (kaelix::is_ok(temperature)) {
             temperature = ksens::temperature_read_celsius(&temperature_c);
@@ -355,6 +360,7 @@ void setup() {
         log_phase("temp", temperature);
         cycle = kaelix::status_first_error(cycle, temperature);
         cycle = feed_watchdog(cycle);
+#endif
 
         Status model = kml::model_init();
         log_phase("model", model);
@@ -427,3 +433,56 @@ void loop() {
     // Não utilizado — o dispositivo nunca sai do estado seguro em setup(),
     // que termina em deep sleep.
 }
+
+#else
+// Bancada USB: sem load switch, sem NTC e sem deep sleep.
+// boot_count do pacote funciona como sequência de ciclos neste ambiente.
+void setup() {
+    Serial.begin(115200);
+    delay(1000);
+    kaelix::logging::log("kaelix", "INFO", "BOOT", "BENCH NTC=off power=direct axis=Z unit=g model=unvalidated");
+    log_phase("wdt", kpower::watchdog_arm_active_phase());
+}
+
+void loop() {
+    static uint32_t sequence = 0U;
+    ++sequence;
+    // Rearma também o RTC WDT, que limita cada ciclo a 20 s.
+    Status cycle = kpower::watchdog_arm_active_phase();
+    ksens::VibrationFeatures features{};
+    Status vibration = ksens::vibration_init();
+    log_phase("vib_init", vibration);
+    if (kaelix::is_ok(vibration)) {
+        vibration = ksens::vibration_read_features(VIBRATION_SAMPLES_PER_CYCLE, &features);
+        log_phase("vib_read", vibration);
+    }
+    cycle = kaelix::status_first_error(cycle, vibration);
+    float rms = MEASUREMENT_INVALID;
+    if (kaelix::is_ok(vibration)) {
+        rms = features.rms;
+        kaelix::logging::log("kaelix", "INFO", "MEASURE", "features rms=%.6f g kurtosis=%.3f crest=%.3f freq=%.2f Hz",
+                      rms, features.kurtosis, features.crest_factor, features.dominant_freq_hz);
+    }
+    cycle = feed_watchdog(cycle);
+    Status radio = kcomms::lora_init();
+    log_phase("rf_init", radio);
+    if (kaelix::is_ok(radio)) {
+        kcomms::LoraPacket packet{};
+        radio = kcomms::make_packet(MachineState::Unknown, cycle, rms,
+                                    MEASUREMENT_INVALID, sequence, &packet);
+        if (kaelix::is_ok(radio)) radio = kcomms::lora_send(packet);
+        log_phase("tx", radio);
+    }
+    cycle = kaelix::status_first_error(cycle, radio);
+    const Status radio_sleep = kcomms::lora_sleep();
+    log_phase("rf_sleep", radio_sleep);
+    cycle = kaelix::status_first_error(cycle, radio_sleep);
+    log_cycle(cycle, MachineState::Unknown, sequence);
+    // Pausa curta com Task WDT alimentado; ciclo + pausa ficam abaixo do RTC WDT.
+    for (uint8_t i = 0U; i < 10U; ++i) {
+        delay(1000);
+        const Status fed = kpower::watchdog_feed();
+        if (kaelix::is_error(fed)) log_phase("wdt_feed", fed);
+    }
+}
+#endif

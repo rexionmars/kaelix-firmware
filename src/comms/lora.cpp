@@ -1,4 +1,5 @@
 #include "lora.h"
+#include "lora_config.h"
 
 #include "../machine_state.h"
 
@@ -6,14 +7,14 @@
 #include "kaelix_status.h"
 
 #include <Arduino.h>
+#include "../serial_log.h"
 #include <RadioLib.h>
+#include <SPI.h>
 
 #include <cstdint>
 
-// RA-02 (SX1278) via SPI. Pinos e potência de TX são placeholders — o
-// código compila e a lógica pode ser revisada sem hardware, mas só
-// será validado de fato (alcance, taxa de perda) na Fase 3, em campo.
-// TODO: confirmar pinos contra o esquemático final.
+// RA-02 (SX1278) via SPI, conforme a montagem de bancada.
+// Alcance e taxa de perda ainda precisam de validação com receptor.
 
 namespace kaelix::comms {
 namespace {
@@ -21,8 +22,13 @@ namespace {
 constexpr int8_t LORA_CS_PIN = 10;   // NSS (SPI SS padrão do esp32-s3-devkitc-1)
 constexpr int8_t LORA_DIO0_PIN = 14; // DIO0 (IRQ) — não usar 8/9 (I2C do MPU6050)
 constexpr int8_t LORA_RST_PIN = 21;  // RESET — não usar 8/9 (I2C do MPU6050)
-constexpr float LORA_FREQUENCY_MHZ = 433.0f;
+#if defined(KAELIX_BENCH) && KAELIX_BENCH
+constexpr uint32_t LORA_SPI_HZ = 100000U;
+constexpr int8_t LORA_TX_POWER_DBM = 2; // bancada: reduzir o pico de corrente
+#else
+constexpr uint32_t LORA_SPI_HZ = 1000000U;
 constexpr int8_t LORA_TX_POWER_DBM = 17;
+#endif
 
 // ---------------------------------------------------------------------
 // Parâmetros do enlace, fixados explicitamente.
@@ -55,11 +61,6 @@ constexpr int8_t LORA_TX_POWER_DBM = 17;
 //
 // syncWord separa esta rede de outras que compartilhem a frequência. O
 // valor 0x12 é o de rede privada; 0x34 é reservado para LoRaWAN.
-constexpr uint8_t LORA_SPREADING_FACTOR = 9U;
-constexpr float LORA_BANDWIDTH_KHZ = 125.0f;
-constexpr uint8_t LORA_CODING_RATE = 5U;    // 4/5
-constexpr uint8_t LORA_SYNC_WORD = 0x12U;   // rede privada
-constexpr uint16_t LORA_PREAMBLE_SYMBOLS = 8U;
 
 // Tempo no ar calculado para os parâmetros acima, usado no orçamento de
 // energia (ver README). Se qualquer parâmetro mudar, este número muda.
@@ -96,10 +97,13 @@ constexpr uint8_t LORA_SLEEP_MAX_ATTEMPTS = 3;
 // alcançam, todas chamadas a partir de setup(). A dependência de ordem
 // entre unidades de tradução que JSF++ proíbe, portanto, não existe aqui
 // por construção, e não por coincidência.
-Module lora_module(LORA_CS_PIN, LORA_DIO0_PIN, LORA_RST_PIN);
+// Barramento explícito: bancada a 100 kHz, mesma velocidade da leitura direta.
+Module lora_module(LORA_CS_PIN, LORA_DIO0_PIN, LORA_RST_PIN, RADIOLIB_NC,
+                   SPI, SPISettings(LORA_SPI_HZ, MSBFIRST, SPI_MODE0));
 SX1278 radio(&lora_module);
 
 bool s_initialized = false;
+bool s_spi_started = false;
 
 // Traduz o código do RadioLib para o vocabulário de falha do projeto.
 // `fallback` é o que o chamador considera a causa genérica da SUA fase:
@@ -111,7 +115,7 @@ kaelix::Status from_radiolib(int16_t state, kaelix::Status fallback) {
         case RADIOLIB_ERR_NONE:
             return kaelix::Status::Ok;
         case RADIOLIB_ERR_CHIP_NOT_FOUND:
-            return kaelix::Status::RadioAbsent;      // sem VCC, sem antena de fato: chip mudo
+            return kaelix::Status::RadioAbsent;      // versão não reconhecida; causa ainda a investigar
 #if defined(RADIOLIB_ERR_SPI_WRITE_FAILED)
         case RADIOLIB_ERR_SPI_WRITE_FAILED:
             return kaelix::Status::RadioBusSilent;   // CS/SCK/MOSI/MISO
@@ -184,7 +188,31 @@ bool packet_is_valid(const LoraPacket& packet) {
 kaelix::Status lora_init() {
     s_initialized = false;
 
+    if (!s_spi_started) {
+        SPI.begin(12, 13, 11, LORA_CS_PIN);
+        if (SPI.bus() == nullptr) return kaelix::Status::RadioBusSilent;
+        s_spi_started = true;
+    }
+#if defined(KAELIX_BENCH) && KAELIX_BENCH
+    // Leitura independente do RadioLib: endereço 0x42 (RegVersion), read bit=0.
+    // Apenas leitura, antes de begin(), para comparar com o HAL da biblioteca.
+    pinMode(LORA_CS_PIN, OUTPUT);
+    digitalWrite(LORA_CS_PIN, HIGH);
+    lora_hardware_reset();
+    SPI.beginTransaction(SPISettings(100000, MSBFIRST, SPI_MODE0));
+    digitalWrite(LORA_CS_PIN, LOW);
+    SPI.transfer(0x42);
+    const uint8_t raw_version = SPI.transfer(0x00);
+    digitalWrite(LORA_CS_PIN, HIGH);
+    SPI.endTransaction();
+    kaelix::logging::log("kaelix", raw_version == 0x12 ? "DEBUG" : "ERROR", "SPI", "lora raw_spi_100k version=0x%02X expected=0x12", raw_version);
+#endif
     const int16_t begin_state = radio.begin(LORA_FREQUENCY_MHZ);
+#if defined(KAELIX_LOG_SERIAL) && KAELIX_LOG_SERIAL
+    const int16_t version = radio.getChipVersion();
+    kaelix::logging::log("kaelix", begin_state == RADIOLIB_ERR_NONE ? "INFO" : "ERROR", "RADIO", "radiolib begin=%d version=0x%02X expected=0x12",
+                  begin_state, static_cast<unsigned>(static_cast<uint16_t>(version)));
+#endif
     if (begin_state != RADIOLIB_ERR_NONE) {
         // Um código não mapeado durante o begin() é, por eliminação,
         // recusa de configuração do driver — nunca falha de transmissão.
@@ -239,6 +267,9 @@ kaelix::Status lora_send(const LoraPacket& packet) {
     // chamada é quem define o pico de 90 mA do ciclo.
     const int16_t state = radio.transmit(reinterpret_cast<const uint8_t*>(&packet),
                                          sizeof(packet));
+#if defined(KAELIX_LOG_SERIAL) && KAELIX_LOG_SERIAL
+    kaelix::logging::log("kaelix", state == RADIOLIB_ERR_NONE ? "INFO" : "ERROR", "TX", "radiolib tx=%d dio0=%d", state, digitalRead(LORA_DIO0_PIN));
+#endif
     return from_radiolib(state, kaelix::Status::RadioTxFailed);
 }
 
@@ -259,6 +290,12 @@ kaelix::Status lora_sleep() {
         }
         const int16_t state = radio.sleep();
         status = from_radiolib(state, kaelix::Status::RadioSleepFailed);
+        // SPIgetRegValue pode devolver zero sem comunicação válida. sleep()
+        // então entende RegOpMode=0 como "já em sono" e devolve sucesso.
+        // Confirmar a identidade impede publicar esse falso OK.
+        if (kaelix::is_ok(status) && radio.getChipVersion() != 0x12) {
+            status = kaelix::Status::RadioSleepFailed;
+        }
         if (kaelix::is_ok(status)) {
             break;
         }
