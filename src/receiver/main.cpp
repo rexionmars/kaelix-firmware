@@ -4,6 +4,7 @@
 #include <SPI.h>
 #include "../comms/lora_config.h"
 #include "packet_decode.h"
+#include "internet.h"
 
 namespace {
 constexpr uint8_t SCK_PIN = 4;
@@ -29,7 +30,10 @@ void IRAM_ATTR on_packet() { packet_ready = true; }
 bool start_listening() {
     packet_ready = false;
     const int16_t result = radio.startReceive();
-    if (result != RADIOLIB_ERR_NONE) kaelix::logging::log("gateway", "ERROR", "RADIO", "start_rx error=%d", result);
+    if (result != RADIOLIB_ERR_NONE) {
+        kaelix::receiver::internet::spi_error();
+        kaelix::logging::log("gateway", "ERROR", "RADIO", "start_rx error=%d", result);
+    }
     return result == RADIOLIB_ERR_NONE;
 }
 
@@ -40,7 +44,7 @@ bool initialize_radio() {
         2, cfg::LORA_PREAMBLE_SYMBOLS);
     kaelix::logging::log("gateway", result == RADIOLIB_ERR_NONE ? "INFO" : "ERROR", "RADIO", "rf_init=%d version=0x%02X", result,
                   static_cast<unsigned>(static_cast<uint16_t>(radio.getChipVersion())));
-    if (result != RADIOLIB_ERR_NONE) return false;
+    if (result != RADIOLIB_ERR_NONE) { kaelix::receiver::internet::spi_error(); return false; }
     kaelix::logging::log("gateway", "INFO", "CONFIG", "config frf=%02X%02X%02X modem1=0x%02X modem2=0x%02X sync=0x%02X",
         module.SPIreadRegister(0x06), module.SPIreadRegister(0x07),
         module.SPIreadRegister(0x08), module.SPIreadRegister(0x1D),
@@ -65,6 +69,7 @@ void setup() {
     Serial.begin(115200);
     // Não depender do computador estar conectado para começar a escutar.
     delay(1500);
+    kaelix::receiver::internet::begin();
     kaelix::logging::log("gateway", "INFO", "BOOT", "C3 RX SCK=4 MISO=5 MOSI=6 CS=7 RST=3 DIO0=1 packet=v2/21B");
     SPI.begin(SCK_PIN, MISO_PIN, MOSI_PIN, CS_PIN);
     if (SPI.bus() == nullptr) {
@@ -77,6 +82,8 @@ void setup() {
 }
 
 void loop() {
+    kaelix::receiver::internet::poll();
+    kaelix::receiver::internet::radio_health(receiving);
     if (!receiving) {
         if (SPI.bus() != nullptr && millis() - last_attempt >= 5000U) {
             last_attempt = millis();
@@ -108,6 +115,7 @@ void loop() {
             static_cast<unsigned long>(polled_packets));
         if (version != 0x12) {
             kaelix::logging::log("gateway", "ERROR", "SPI", "SPI_VERSION_LOST; retry initialization");
+            kaelix::receiver::internet::spi_error();
             receiving = false;
             last_attempt = now;
             return;
@@ -129,6 +137,7 @@ void loop() {
     if (version_first != 0x12 || version_second != 0x12) {
         kaelix::logging::log("gateway", "ERROR", "SPI", "SPI_UNSTABLE irq=0x%02X versions=0x%02X/0x%02X; retry initialization",
             static_cast<unsigned>(flags), version_first, version_second);
+        kaelix::receiver::internet::spi_error();
         packet_ready = false;
         receiving = false;
         last_attempt = now;
@@ -144,6 +153,7 @@ void loop() {
     const size_t length = radio.getPacketLength();
     if (length == 0U || length > sizeof(bytes)) {
         ++rejected_packets;
+        kaelix::receiver::internet::rejected();
         kaelix::logging::log("gateway", "WARN", "REJECT", "reject length=%u", static_cast<unsigned>(length));
         kaelix::logging::log("gateway", "DEBUG", "SPI", "after_reject version=0x%02X op=0x%02X irq=0x%02X",
             module.SPIreadRegister(0x42), module.SPIreadRegister(0x01),
@@ -160,13 +170,16 @@ void loop() {
         if (decoded == kaelix::receiver::DecodeResult::Ok) {
             ++received_packets;
             print_packet(packet, rssi, snr);
+            kaelix::receiver::internet::enqueue(packet, rssi, snr);
         } else {
             ++rejected_packets;
+            kaelix::receiver::internet::rejected();
             kaelix::logging::log("gateway", "WARN", "REJECT", "reject decode=%u length=%u",
                 static_cast<unsigned>(decoded), static_cast<unsigned>(length));
         }
     } else {
         ++rejected_packets;
+        kaelix::receiver::internet::rejected();
         kaelix::logging::log("gateway", "WARN", "REJECT", "read error=%d", result);
         kaelix::logging::log("gateway", "DEBUG", "SPI", "after_read_error version=0x%02X op=0x%02X",
             module.SPIreadRegister(0x42), module.SPIreadRegister(0x01));

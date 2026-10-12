@@ -35,3 +35,6 @@ data/cwru/
 .temp
 
 hardware/3dmodels/origem/*.step
+
+# Configuração privada do gateway
+include/gateway_config.local.h
