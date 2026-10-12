@@ -9,15 +9,15 @@ O ESP32-C3 Super Mini com o segundo módulo LoRa será a central receptora, tamb
 ```text
 Sensor no motor → ESP32-S3 → LoRa pelo ar → LoRa + C3
                                                     ↓
-                                          Hoje: monitor serial
-                                          Depois: banco e painel
+                                          Validado: monitor serial
+                                          A validar: Wi-Fi → API → banco → painel
 ```
 
 O **S3 instalado no motor** coleta a vibração, calcula os indicadores e envia um pacote pequeno de **21 bytes**. Ele contém identificação do dispositivo, sequência, estado, diagnóstico, RMS e temperatura quando disponível. As amostras completas de vibração não são enviadas atualmente.
 
-O **C3 recebe o pacote**, verifica sua integridade e mostra os dados pelo USB no computador. **Hoje o caminho termina no monitor serial**: ainda não implementamos banco de dados, painel ou envio pela internet. O firmware receptor está preparado, mas a recepção nas placas ainda precisa ser validada.
+O **C3 recebe o pacote**, verifica sua integridade e mostra os dados pelo USB no computador. O caminho validado em bancada termina no monitor serial. A API Go com PostgreSQL e a base desktop já existem; o firmware agora inclui transporte Wi-Fi/HTTPS, ainda pendente de configuração e teste físico. A recepção foi validada em bancada com pacotes v2 e CRC correto; as falhas SPI anteriores ainda precisam ser acompanhadas em ensaios maiores.
 
-Para completar isso, podemos fazer o C3 enviar os dados por Wi-Fi para um servidor, ou usar um programa no computador para ler o USB e salvar as medições.
+Para testar o envio pela rede, seguir a [configuração do gateway C3](../../../src/receiver/INTERNET.md). O cliente de API no desktop é uma etapa separada.
 
 ## Como seria para dez motores
 
@@ -48,3 +48,5 @@ Nesta etapa de bancada, sem NTC e com o modelo ainda não validado para o motor,
 ## Referência de implementação
 
 As ligações do RA-02 ao C3 Super Mini e os comandos de upload estão no [guia do receptor](../../../src/receiver/README.md).
+
+A evolução para gateway pela internet e desktop Wails está na [proposta de arquitetura](arquitetura-desktop-internet.md).

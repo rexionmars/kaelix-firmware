@@ -173,3 +173,7 @@ o transmissor nem confirma que um pacote chegou.
 Mantenha o S3 com `esp32-s3-bench` ligado simultaneamente e capture pelo
 menos 30 s do monitor do C3. Se não houver RxDone, confira também o log
 do S3 alimentado pela fonte para confirmar que continua completando TX.
+
+## Envio para API pela rede
+
+O receptor agora inclui Wi-Fi e transporte JSON v1. Ver [configuração e testes de internet](INTERNET.md). Sem configuração local completa, continua recebendo apenas pelo LoRa/serial.
