@@ -69,6 +69,7 @@ resultados já verificados.
 
 ```bash
 uv run python experiments/figures/scripts/export_source_data.py      # CSVs das figuras 1 e 2
+uv run python experiments/figures/scripts/export_deteccao_data.py    # detecção por classe em MAFAULDA (texto do TCC)
 uv run python experiments/figures/scripts/export_enclosure_data.py   # CSVs da figura 3
 uv run python experiments/figures/scripts/export_thermal_data.py     # CSVs da figura 4
 

@@ -1,11 +1,10 @@
-# Figura 2 — Três escolhas metodológicas alteram os resultados mais do que o
-# efeito que se pretende medir.
+# Figura 2 — Efeito de quatro escolhas metodológicas sobre os resultados.
 #
-# Conclusão: integração no domínio errado, split que vaza assinatura de ensaio e
-# limiar herdado do default produzem erros de 73-716%, +36 pontos de acurácia
-# aparente e 42% de falso alarme, respectivamente.
+# Sinal sintetizado. Integração (a, b), partição (c), parâmetro de contaminação (d) e banda
+# com área parcial (e). O painel c usa um Random Forest supervisionado, e o d mede o falso
+# alarme nas janelas do ajuste; a legenda no texto informa as duas condições.
 #
-# Arquétipo: grade quantitativa, três blocos de evidência independentes.
+# Arquétipo: grade quantitativa, blocos de evidência independentes.
 # Uso: Rscript experiments/figures/scripts/fig2_metodologia.R
 
 script_dir <- function() {
@@ -23,67 +22,82 @@ dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
 rd <- function(f) readr::read_csv(file.path(data_dir, f), show_col_types = FALSE)
 
+ANOT <- 2.2   # corpo das anotações, em mm (cerca de 6,3 pt)
+virgula <- function(x) gsub(".", ",", x, fixed = TRUE)
+num2 <- function(x) virgula(sprintf("%.2f", x))
+num3 <- function(x) virgula(sprintf("%.3f", x))
+pct1 <- function(x) virgula(sprintf("%.1f %%", 100 * x))
+eixo_decimal <- function(x) virgula(sprintf("%.1f", x))
+
 v_exato <- rd("fig2_referencia.csv")$valor_exato_mm_s[1]
 
 # ---------------------------------------------------------------------------
-# a — erro de cada método de integração contra o valor analítico
+# a — velocidade eficaz de cada variante contra o valor analítico
 # ---------------------------------------------------------------------------
+nomes_metodo <- c("No tempo, sem filtro",
+                  "No tempo, com filtro",
+                  "Na frequência",
+                  "Na frequência, com viés",
+                  "No tempo, sem filtro,\ncom viés")
+
 intg <- rd("fig2a_integracao.csv") |>
-  mutate(metodo = factor(metodo, levels = rev(metodo[order(ordem)])),
+  arrange(ordem) |>
+  mutate(rotulo = nomes_metodo,
+         rotulo = factor(rotulo, levels = rev(nomes_metodo)),
          tipo = ifelse(correto, "correto", "incorreto"))
 
-p_a <- ggplot(intg, aes(rms_mm_s, metodo, fill = tipo)) +
+p_a <- ggplot(intg, aes(rms_mm_s, rotulo, fill = tipo)) +
   geom_vline(xintercept = v_exato, linewidth = 0.4,
              colour = pal[["neutral_dark"]], linetype = "22") +
   geom_col(width = 0.6) +
-  geom_text(aes(label = ifelse(abs(erro_pct) < 1, "exato",
-                               sprintf("%+.0f%%", erro_pct))),
-            hjust = -0.15, size = 1.9,
+  geom_text(aes(label = ifelse(abs(erro_pct) < 0.01, "erro abaixo de 0,01 %",
+                               sprintf("+%.0f %%", erro_pct))),
+            hjust = -0.1, size = ANOT,
             colour = ifelse(intg$correto, pal[["signal_blue"]], pal[["accent_red"]])) +
-  annotate("text", x = v_exato, y = 5.72, size = 1.75, hjust = -0.08,
+  annotate("text", x = v_exato, y = 5.72, size = ANOT, hjust = -0.05,
            colour = pal[["neutral_dark"]],
-           label = sprintf("valor analítico exato: %.2f mm/s", v_exato)) +
+           label = sprintf("valor analítico: %s mm/s", num2(v_exato))) +
   scale_fill_manual(values = metodo_cols, guide = "none") +
   scale_x_continuous(limits = c(0, 72), breaks = seq(0, 60, 20),
                      expand = expansion(mult = c(0, 0.02))) +
   coord_cartesian(clip = "off") +
-  labs(title = "Só a integração na frequência recupera a velocidade correta",
-       subtitle = "senoide de 3,0 m/s² a 50 Hz, cuja integral é conhecida analiticamente",
-       x = "Velocidade RMS medida (mm/s)", y = NULL) +
+  labs(x = "Velocidade eficaz (mm/s)", y = NULL) +
   theme(axis.text.y = element_text(lineheight = 0.85),
-        plot.margin = margin(2, 8, 2, 2))
+        plot.margin = margin(8, 8, 2, 2))
 
 # ---------------------------------------------------------------------------
-# b — a deriva que produz o erro de 716%
+# b — deriva sob viés
 # ---------------------------------------------------------------------------
 der <- rd("fig2b_deriva.csv") |>
-  mutate(metodo = factor(metodo, levels = c("no tempo, sem passa-alta", "na frequência")))
+  mutate(metodo = factor(metodo, levels = c("no tempo, sem passa-alta", "na frequência"),
+                         labels = c("no tempo, sem filtro", "na frequência")))
 
 p_b <- ggplot(der, aes(tempo_s, velocidade_mm_s, colour = metodo)) +
   geom_hline(yintercept = v_exato, linewidth = 0.35,
              colour = pal[["neutral_dark"]], linetype = "22") +
   geom_line(linewidth = 0.22) +
-  scale_colour_manual(values = c("no tempo, sem passa-alta" = pal[["accent_red"]],
+  scale_colour_manual(values = c("no tempo, sem filtro" = pal[["accent_red"]],
                                  "na frequência" = pal[["signal_blue"]])) +
   scale_x_continuous(breaks = seq(0, 4, 1), expand = expansion(mult = 0.01)) +
   scale_y_continuous(limits = c(-25, 105), breaks = seq(0, 100, 50)) +
-  labs(title = "Um bias de 0,02 m/s² faz a integração no tempo derivar",
-       subtitle = "offset dentro da especificação do MPU6050",
-       x = "Tempo (s)", y = "Velocidade (mm/s)") +
+  labs(x = "Tempo (s)", y = "Velocidade (mm/s)") +
   theme(legend.position = "inside", legend.position.inside = c(0.02, 0.97),
         legend.justification = c(0, 1), legend.key.height = unit(2.2, "mm"))
 
 # ---------------------------------------------------------------------------
-# c — vazamento de dados no split
+# c — partição
 # ---------------------------------------------------------------------------
 spl   <- rd("fig2c_split.csv")
 folds <- rd("fig2c_folds.csv")
 base  <- rd("fig2c_baseline.csv")$baseline[1]
 
-spl <- spl |> mutate(estrategia = factor(estrategia, levels = estrategia[order(ordem)]),
-                     tipo = ifelse(tipo == "correto", "correto", "incorreto"))
+spl <- spl |>
+  arrange(ordem) |>
+  mutate(rotulo = factor(c("Aleatória\npor janela", "Por ensaio"),
+                         levels = c("Aleatória\npor janela", "Por ensaio")),
+         tipo = ifelse(tipo == "correto", "correto", "incorreto"))
 
-p_c <- ggplot(spl, aes(estrategia, media, fill = tipo)) +
+p_c <- ggplot(spl, aes(rotulo, media, fill = tipo)) +
   geom_hline(yintercept = base, linewidth = 0.35,
              colour = pal[["neutral_mid"]], linetype = "22") +
   geom_col(width = 0.5) +
@@ -92,73 +106,64 @@ p_c <- ggplot(spl, aes(estrategia, media, fill = tipo)) +
   geom_point(data = folds, aes(x = 2, y = acuracia), inherit.aes = FALSE,
              position = position_jitter(width = 0.1, height = 0, seed = 1),
              size = 0.75, colour = pal[["neutral_dark"]], alpha = 0.85) +
-  geom_text(aes(label = sprintf("%.3f", media), y = media + desvio + 0.05),
-            size = 2.1, fontface = "bold") +
-  annotate("text", x = 2.46, y = base + 0.04, hjust = 1, size = 1.7,
-           colour = pal[["neutral_mid"]], label = "chute") +
+  geom_text(aes(label = pct1(media), y = media + desvio + 0.05), size = ANOT) +
+  annotate("text", x = 1.5, y = base + 0.04, size = ANOT,
+           colour = pal[["neutral_mid"]], label = "acaso") +
   scale_fill_manual(values = metodo_cols, guide = "none") +
   scale_y_continuous(limits = c(0, 1.14), breaks = seq(0, 1, 0.25),
+                     labels = label_percent(accuracy = 1, suffix = " %"),
                      expand = expansion(mult = c(0, 0.02))) +
-  labs(title = "Vazamento no split",
-       subtitle = "pontos: folds do split por ensaio",
-       x = NULL, y = "Acurácia") +
+  labs(x = "Partição", y = "Acurácia") +
   theme(axis.text.x = element_text(lineheight = 0.85),
         axis.title.y = element_text(margin = margin(r = 0)),
         plot.margin = margin(2, 2, 2, 0))
 
 # ---------------------------------------------------------------------------
-# d — contamination controla o falso alarme, não a qualidade
+# d — parâmetro de contaminação e falso alarme nas janelas do ajuste
 # ---------------------------------------------------------------------------
 cont <- rd("fig2d_contamination.csv") |>
   mutate(contamination = factor(contamination,
-                                levels = c("0.5", "0.2", "0.1", "0.01", "auto")),
+                                levels = c("0.5", "0.2", "0.1", "0.01", "auto"),
+                                labels = c("0,5", "0,2", "0,1", "0,01", "padrão")),
          tipo = ifelse(is_default, "incorreto", "correto"))
 
 p_d <- ggplot(cont, aes(contamination, falso_alarme, fill = tipo)) +
   geom_col(width = 0.58) +
-  geom_text(aes(label = percent(falso_alarme, accuracy = 0.1)),
-            vjust = -0.45, size = 1.85) +
-  annotate("text", x = 5, y = 0.545, size = 1.7, colour = pal[["accent_red"]],
-           label = "default") +
+  geom_text(aes(label = pct1(falso_alarme)), vjust = -0.45, size = ANOT) +
   scale_fill_manual(values = metodo_cols, guide = "none") +
-  scale_y_continuous(limits = c(0, 0.62), labels = percent_format(accuracy = 1),
+  scale_y_continuous(limits = c(0, 0.62), labels = label_percent(accuracy = 1, suffix = " %"),
                      breaks = seq(0, 0.5, 0.25),
                      expand = expansion(mult = c(0, 0.02))) +
-  labs(title = "O default marca 42% como anomalia",
-       subtitle = "detecção foi 100% em todos os casos",
-       x = "contamination", y = "Falso alarme")
+  labs(x = "Parâmetro de contaminação", y = "Falso alarme")
 
 # ---------------------------------------------------------------------------
-# e — a banda limita o detector onde importa
+# e — curvas ROC em defeito incipiente
 # ---------------------------------------------------------------------------
-roc <- rd("fig2e_roc.csv")
+roc <- rd("fig2e_roc.csv") |>
+  mutate(cadeia = ifelse(grepl("20 kHz", banda_curta), "20 kHz", "1 kHz"),
+         rotulo = sprintf("%s: AUC %s; pAUC %s", cadeia, num3(auc), num3(pauc)))
 
-p_e <- ggplot(roc, aes(fpr, tpr, colour = banda, linetype = banda)) +
-  annotate("rect", xmin = 0, xmax = 0.05, ymin = 0, ymax = 1,
+rotulo_20 <- unique(roc$rotulo[roc$cadeia == "20 kHz"])
+rotulo_1  <- unique(roc$rotulo[roc$cadeia == "1 kHz"])
+roc <- roc |> mutate(rotulo = factor(rotulo, levels = c(rotulo_20, rotulo_1)))
+
+p_e <- ggplot(roc, aes(fpr, tpr, colour = rotulo, linetype = rotulo)) +
+  annotate("rect", xmin = 0, xmax = 0.10, ymin = 0, ymax = 1,
            fill = pal[["orange_wash"]], alpha = 0.13) +
   geom_abline(linewidth = 0.3, linetype = "22", colour = pal[["neutral_mid"]]) +
   geom_line(linewidth = 0.45) +
-  annotate("text", x = 0.10, y = 0.42, hjust = 0, size = 1.7,
-           colour = "#8a5a00", lineheight = 0.95,
-           label = "operação realista\n(falso alarme ≤ 5%)") +
-  scale_colour_manual(values = setNames(
-    c(pal[["signal_blue"]], pal[["accent_red"]]),
-    c(grep("20 kHz", unique(roc$banda), value = TRUE),
-      grep("MPU", unique(roc$banda), value = TRUE)))) +
-  scale_linetype_manual(values = setNames(
-    c("solid", "31"),
-    c(grep("20 kHz", unique(roc$banda), value = TRUE),
-      grep("MPU", unique(roc$banda), value = TRUE)))) +
-  scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.5)) +
-  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.5)) +
+  annotate("text", x = 0.24, y = 0.82, hjust = 0, size = ANOT,
+           colour = "#8a5a00", label = "falso alarme até 10 %") +
+  scale_colour_manual(values = setNames(c(pal[["signal_blue"]], pal[["accent_red"]]),
+                                        c(rotulo_20, rotulo_1))) +
+  scale_linetype_manual(values = setNames(c("solid", "31"), c(rotulo_20, rotulo_1))) +
+  scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.5), labels = eixo_decimal) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.5), labels = eixo_decimal) +
   coord_fixed() +
-  labs(title = "A banda decide o defeito sutil",
-       subtitle = "pAUC revela perda 4x maior que a AUC",
-       x = "Falso alarme", y = "Detecção") +
-  theme(legend.position = "inside", legend.position.inside = c(0.97, 0.13),
+  labs(x = "Falso alarme", y = "Detecção") +
+  theme(legend.position = "inside", legend.position.inside = c(0.98, 0.14),
         legend.justification = c(1, 0.5), legend.direction = "vertical",
         legend.key.height = unit(1.9, "mm"), legend.key.width = unit(2.8, "mm"),
-        legend.text = element_text(size = BASE - 1.5),
         legend.spacing.y = unit(0.2, "mm"))
 
 # ---------------------------------------------------------------------------

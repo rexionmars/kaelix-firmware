@@ -213,6 +213,16 @@ df["erro_pct"] = (df.rms_mm_s - V_EXATO) / V_EXATO * 100
 df["correto"] = df.erro_pct.abs() < 1.0
 write(df, "fig2a_integracao.csv")
 
+# A soma acumulada parte de zero e deixa a constante de integração na média da velocidade.
+# O texto informa o que resta do erro quando essa média ou a tendência linear são removidas.
+v_sem_hp, v_com_hp, v_bias = (vel_tempo_sem_hp(a_test, FS_V), vel_tempo_com_hp(a_test, FS_V),
+                              vel_tempo_sem_hp(a_bias, FS_V))
+write(pd.DataFrame([
+    {"metodo": "no tempo, sem filtro, sem a média", "rms_mm_s": rms(v_sem_hp - v_sem_hp.mean())},
+    {"metodo": "no tempo, com filtro, sem a média", "rms_mm_s": rms(v_com_hp - v_com_hp.mean())},
+    {"metodo": "no tempo, sem filtro, com viés, sem a tendência linear", "rms_mm_s": rms(signal.detrend(v_bias))},
+]).assign(erro_pct=lambda d: (d.rms_mm_s - V_EXATO) / V_EXATO * 100), "fig2a_sem_media.csv")
+
 # deriva temporal (subamostrada para manter o CSV enxuto)
 step = 5
 write(pd.DataFrame({
@@ -302,15 +312,35 @@ sc = StandardScaler().fit(Xc[yc == 0])
 Xn = sc.transform(Xc)
 
 rows = []
+escores_base = None
 for cont in [0.5, 0.2, 0.1, 0.01, "auto"]:
     iso = IsolationForest(contamination=cont, n_estimators=200, random_state=0).fit(Xn[yc == 0])
+    escores = -iso.score_samples(Xn)
+    if escores_base is None:
+        escores_base = escores
     rows.append({
         "contamination": str(cont),
         "falso_alarme": (iso.predict(Xn[yc == 0]) == -1).mean(),
         "deteccao": (iso.predict(Xn[yc == 1]) == -1).mean(),
         "is_default": cont == "auto",
+        "auc": roc_auc_score(yc, escores),
+        "mesmos_escores": bool(np.array_equal(escores, escores_base)),
     })
 write(pd.DataFrame(rows), "fig2d_contamination.csv")
+
+# As taxas acima são medidas nas próprias janelas do ajuste. Aqui, um ensaio normal fica de fora.
+rows = []
+for retido in range(N_ENSAIOS):
+    Xa, Xr = [], []
+    for r, x in enumerate(sadios_c):
+        for w in janelas(x, FS_REF):
+            (Xr if r == retido else Xa).append(extrair_features(w, FS_REF))
+    esc = StandardScaler().fit(Xa)
+    for cont in ["auto", 0.01]:
+        iso = IsolationForest(contamination=cont, n_estimators=200, random_state=0).fit(esc.transform(Xa))
+        rows.append({"ensaio_retido": retido, "contamination": str(cont),
+                     "falso_alarme": (iso.predict(esc.transform(Xr)) == -1).mean()})
+write(pd.DataFrame(rows), "fig2d_fora_do_treino.csv")
 
 
 def auc_e_roc(fs_alvo):
@@ -328,13 +358,14 @@ def auc_e_roc(fs_alvo):
     fpr, tpr, _ = roc_curve(yb, sc_)
     # pAUC (FPR <= 0,1) segue o protocolo do DCASE2020 Task 2: a AUC global não
     # caracteriza o ponto de operação, a parcial sim
-    return (roc_auc_score(yb, sc_), roc_auc_score(yb, sc_, max_fpr=0.10), fpr, tpr)
+    return (roc_auc_score(yb, sc_), roc_auc_score(yb, sc_, max_fpr=0.10),
+            roc_auc_score(yb, sc_, max_fpr=0.05), fpr, tpr)
 
 
 rows = []
 for fs_alvo, lab in [(FS_REF, "Sensor 20 kHz"), (FS_MPU, "MPU6050 1 kHz")]:
-    auc, pauc, fpr, tpr = auc_e_roc(fs_alvo)
-    rows.append(pd.DataFrame({"fpr": fpr, "tpr": tpr, "auc": auc, "pauc": pauc,
+    auc, pauc, pauc_05, fpr, tpr = auc_e_roc(fs_alvo)
+    rows.append(pd.DataFrame({"fpr": fpr, "tpr": tpr, "auc": auc, "pauc": pauc, "pauc_05": pauc_05,
                               "banda": f"{lab}\nAUC {auc:.3f} · pAUC {pauc:.3f}",
                               "banda_curta": lab}))
     print(f"    {lab}: AUC {auc:.3f}  pAUC {pauc:.3f}")
