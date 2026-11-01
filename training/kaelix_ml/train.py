@@ -1,7 +1,7 @@
 """Orquestra o treino do Isolation Forest.
 
-Três decisões de método. O porquê de cada uma está no README, seção
-"Protocolo de treino e calibração":
+Três decisões de método. O porquê de cada uma está em
+docs/engenharia/decisoes-arquitetura.md, seção "Protocolo de treino e calibração":
 
 **Split por grupo.** A validação usa `GroupKFold` com o arquivo
 de origem como grupo. Janelas do mesmo ensaio nunca ficam dos dois lados

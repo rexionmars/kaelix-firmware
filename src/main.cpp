@@ -19,7 +19,7 @@
 
 // Kaelix — ciclo principal: acordar → ler sensores → processar → inferir
 // → transmitir (LoRa) → dormir o rádio → cortar periféricos → deep sleep.
-// Ver README.md para a visão geral de cada módulo e o porquê das decisões,
+// Ver README.md para a visão geral, docs/engenharia/decisoes-arquitetura.md para o porquê,
 // docs/engenharia/ARQUITETURA-SOFTWARE.md §5-§6 para a política de erro e o estado
 // seguro, e docs/engenharia/ANALISE-DE-FALHAS.md §5-§6 para os modos de falha que
 // cada verificação daqui fecha.

@@ -17,7 +17,7 @@ Nenhum documento do projeto declarava requisitos numerados de forma completa. Os
    `Status` retornado, cada `static_assert` e cada cota de laço é um requisito
    que alguém decidiu impor. Requisito derivado do código tem a vantagem de já
    nascer verificável.
-2. **As decisões registradas** em `README.md` (orçamento de energia, formato do
+2. **As decisões registradas** em `docs/engenharia/decisoes-arquitetura.md` (orçamento de energia, formato do
    pacote, banda de análise, escolha do Isolation Forest nativo).
 3. **`docs/engenharia/ARQUITETURA-SOFTWARE.md`** — regra de dependência entre camadas,
    política de memória, política de erro, estado seguro, paridade numérica, e a

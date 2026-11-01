@@ -5,7 +5,7 @@ e o R cuida só da camada gráfica. Grava CSVs em experiments/figures/data/.
 
 Nenhum número desta figura é estimativa de catálogo: tempo no ar sai da
 fórmula de LoRa, autonomia sai do mesmo orçamento de energia documentado
-no README, e probabilidade de colisão sai do modelo ALOHA puro.
+em docs/engenharia/decisoes-arquitetura.md, e probabilidade de colisão sai do modelo ALOHA puro.
 """
 
 import math
@@ -16,7 +16,7 @@ import pandas as pd
 OUT = Path(__file__).resolve().parents[1] / "data"
 OUT.mkdir(parents=True, exist_ok=True)
 
-# --- parâmetros do dispositivo (espelham src/ e o README) -------------------
+# --- parâmetros do dispositivo (espelham src/ e as decisões de arquitetura) --
 PAYLOAD_BYTES = 20        # LoraPacket
 PREAMBLE_SYM = 8
 BW_KHZ = 125
@@ -44,7 +44,7 @@ def airtime_s(sf, bw_khz=BW_KHZ, cr=CR, pl=PAYLOAD_BYTES, pre=PREAMBLE_SYM, crc=
 
 
 def autonomia_dias(t_tx_s, i_tx=I_LORA_TX, i_idle_ativo=I_LORA_STANDBY, i_idle_sleep=I_LORA_SLEEP):
-    """Autonomia pelo mesmo orcamento do README: carga por ciclo / periodo."""
+    """Autonomia pelo mesmo orcamento de decisoes-arquitetura.md: carga por ciclo / periodo."""
     q_ativo = (I_ESP32_ATIVO + I_MPU6050 + i_idle_ativo + I_HT7333) * FASE_ATIVA_S
     q_tx = (I_ESP32_ATIVO + I_MPU6050 + i_tx + I_HT7333) * t_tx_s
     q_sleep = (i_idle_sleep + I_DEEPSLEEP + I_HT7333) * CICLO_S

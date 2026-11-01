@@ -100,7 +100,7 @@ static_assert(offsetof(LoraPacket, crc) == sizeof(LoraPacket) - sizeof(uint16_t)
 // OBRIGATÓRIO antes do deep sleep: o rádio não está no rail comutado
 // (+3V3_SW), então sem esta chamada ele fica em standby durante os 10
 // minutos de sleep, consumindo 900 mA·s por ciclo — 5,5x o orçamento
-// inteiro do dispositivo. Ver o orçamento de energia no README.
+// inteiro do dispositivo. Ver o orçamento em docs/engenharia/decisoes-arquitetura.md.
 //
 // Tenta reafirmar o sleep com reset de hardware entre as tentativas
 // (INV-1 da análise de falhas), com cota fixa de tentativas. O retorno

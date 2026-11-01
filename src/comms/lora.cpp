@@ -64,7 +64,7 @@ constexpr int8_t LORA_TX_POWER_DBM = 17;
 // valor 0x12 é o de rede privada; 0x34 é reservado para LoRaWAN.
 
 // Tempo no ar calculado para os parâmetros acima, usado no orçamento de
-// energia (ver README). Se qualquer parâmetro mudar, este número muda.
+// energia (docs/engenharia/decisoes-arquitetura.md). Se um parâmetro mudar, este número muda.
 constexpr uint32_t LORA_AIRTIME_MS = 185U;
 
 // Pulso de reset do SX1278: o datasheet pede RST em nível baixo por mais
