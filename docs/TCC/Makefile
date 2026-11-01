@@ -5,7 +5,7 @@
 # As figuras NÃO são geradas aqui: vêm de ../../experiments/figures/output/,
 # regeneradas pelo pipeline em experiments/figures/scripts/.
 
-DOC := tcc
+DOC := main
 TEX := pdflatex -interaction=nonstopmode -halt-on-error -output-directory=build
 BUILD_DIR := build
 
@@ -13,11 +13,17 @@ BUILD_DIR := build
 
 all: $(BUILD_DIR)/$(DOC).pdf
 
-# Garante que o diretório build existe antes de compilar
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
-
-$(BUILD_DIR)/$(DOC).pdf: $(wildcard *.tex) referencias.bib | $(BUILD_DIR)
+# Depende também dos arquivos em subpastas (capítulos, preâmbulo, pré-textuais):
+# com só *.tex, editar um capítulo não disparava nova compilação.
+# O mkdir fica na receita, e não numa regra própria, porque build/ já existe
+# no repositório (.gitkeep): o \include de capitulos/ grava capitulos/*.aux
+# dentro de build/, e o pdflatex não cria subdiretórios.
+#
+# O rm remove restos de compilação fora de build/: o bibtex procura capitulos/*.aux
+# primeiro aqui, e uma cópia velha esconde as citações novas dos capítulos.
+$(BUILD_DIR)/$(DOC).pdf: $(wildcard *.tex */*.tex *.bst) referencias.bib $(wildcard imagens/*)
+	mkdir -p $(BUILD_DIR)/capitulos
+	rm -f capitulos/*.aux
 	$(TEX) $(DOC)
 	bibtex $(BUILD_DIR)/$(DOC)
 	makeglossaries -d $(BUILD_DIR) $(DOC)

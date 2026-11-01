@@ -1,66 +1,55 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Apêndice A --- Registro de verificação do hardware
+%% Apêndice A --- Práticas de engenharia do firmware
 %%
-%% Absorve o registro de engenharia do relatório de verificação de hardware:
-%% correções no esquemático, defeitos de geração corrigidos e abertos, versões.
-%% O material de PROJETO (cadeia de geração, placa, PDN) fica no Capítulo 3.
-%%
-%% PENDENTE DE TRANSCRIÇÃO: as tabelas completas de defeitos (itens 1--21) e de
-%% comparação entre versões v1/v2 estão em docs/relatorio/verificacao-hardware.tex
-%% e devem ser transportadas na íntegra. A estrutura abaixo é a do destino.
+%% Valores conferidos em src/sensors/vibration.h, src/comms/lora.h,
+%% src/ml/model.h, src/power/watchdog.h e training/tests/test_export_cpp.py.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\chapter{Registro de verificação do hardware}
-\label{ape:hardware}
+\chapter{Práticas de engenharia do \emph{firmware}}
+\label{ape:praticas}
 
-Este apêndice reúne o registro de engenharia da cadeia de geração descrita na
-Seção~\ref{sec:dev-hardware}. Ele é mantido no trabalho por uma razão de método: a
-verificação só é informativa se os defeitos que ela encontrou forem publicados junto com os
-que ela não encontrou.
+Algumas práticas usadas no \emph{firmware} vêm de normas e da literatura de sistemas críticos.
+Essas fontes servem aqui como referência. O Kaelix é um protótipo acadêmico e não passou por
+nenhum processo de certificação.
 
-Nenhum resultado aqui provém de bancada. Todos os valores são de geração, verificação
-geométrica ou simulação, e o registro não reivindica validação experimental. Cada afirmação
-tem associada a grandeza que a sustenta; itens sem medição associada aparecem como
-\textsf{não verificado}.
+\section{Fontes das práticas}
+\label{sec:ape-escalas}
 
-\section{Correções no esquemático e defeitos corrigidos}
-\label{sec:ape-corrigidos}
+As normas setoriais classificam a criticidade de formas diferentes, e não há equivalência
+normativa entre elas. A norma de aviônica classifica o \emph{software} pela severidade da
+condição de falha e não atribui taxa de falha ao \emph{software} \cite{do178c}. A norma
+genérica define faixas numéricas de medida de falha alvo \cite{iec61508}. A norma automotiva
+combina severidade, exposição e controlabilidade \cite{iso26262}.
 
-Os defeitos identificados e corrigidos durante a geração constam do relatório de
-verificação com o valor antigo, o valor corrigido e a causa. Incluem, entre outros, erro de
-referencial angular de \emph{pad} que produzia \num{42} curtos no DRC, e inversão de sinal
-de rotação de \emph{footprint}.
+\section{Práticas adotadas}
+\label{sec:ape-mecanismos}
 
-\section{Defeitos abertos}
-\label{sec:ape-abertos}
+Nenhuma das práticas abaixo exige componente adicional.
 
-\emandamento{Os defeitos abaixo permanecem abertos e restringem afirmações específicas.}
+\textbf{Propagação de erro.} Cada função devolve um código de estado, e o pacote leva o código do
+primeiro erro do ciclo. Sem esse código, uma leitura com falha chegaria ao receptor como uma leitura
+normal \cite{esa1996,knight1986}.
 
-\begin{itemize}
-  \item \textbf{A placa não parafusa nos bosses do invólucro.} Na v1, o furo M3 exigiria
-        material até \SI{28,2}{\milli\meter} na diagonal e o canto termina em
-        \SI{27,5}{\milli\meter}; na v2, os recortes coincidem com os eixos dos bosses. A
-        fixação passa a ser o assento pelo aro mais três furos M2 próprios.
-  \item \textbf{Corredor do cabo.} Com \SI{6,0}{\milli\meter}, a v1 perde a saída de terra
-        de dois componentes, com três itens soltos no DRC.
-  \item \textbf{Altura do conjunto definida pelos conectores.} Decidir se o cabeçalho de
-        gravação permanece populado no produto.
-  \item \textbf{Divisor do NTC satura no frio}, atingindo \SI{3,22}{\volt} a
-        \SI{-40}{\celsius}, acima da faixa útil do conversor. Abaixo de aproximadamente
-        \SI{-35}{\celsius} os limiares de curto e de circuito aberto não disparam.
-  \item \textbf{Numeração de pino do regulador varia por fabricante} ---
-        \textsf{não verificado}; conferir contra a folha de dados antes de fabricar.
-  \item \textbf{Furo de conector no invólucro sem conector correspondente} na netlist.
-  \item \textbf{Rabicho de antena ausente da lista de materiais}; a ligação do conector
-        do módulo de rádio ao painel não está especificada.
-  \item \textbf{Nenhum código lê a tensão da bateria.} O caminho de hardware existe; os
-        limiares do requisito de segurança correspondente não estão implementados.
-\end{itemize}
+\textbf{Saída só em caso de sucesso.} Quando a leitura do sensor falha, a função não escreve no
+vetor de amostras. Assim, o detector não recebe zeros que pareçam uma máquina parada.
 
-\section{Limitações declaradas das análises}
-\label{sec:ape-limitacoes}
+\textbf{Valor inválido explícito.} O valor eficaz vai como NaN quando não foi medido, porque zero
+é uma leitura possível. O estado \texttt{UNKNOWN} indica que o dispositivo não avaliou a máquina.
 
-A análise modal assume ASA isotrópico e maciço, hipótese otimista: a peça impressa com
-preenchimento parcial é anisotrópica e menos rígida. O amortecimento do material não foi
-medido, e sim herdado de análise anterior do projeto. As demais limitações constam da
-Seção~\ref{sec:conc-alcance}.
+\textbf{Versão no pacote.} O primeiro byte do pacote informa a versão do formato, e o receptor
+recusa versões que não conhece.
+
+\textbf{\emph{Watchdog}.} Um temporizador reinicia o dispositivo se um ciclo travar.
+
+\textbf{Testes no computador.} As funções de processamento rodam sem o \emph{hardware}. Um teste
+compara o escore do detector em C++ com o da biblioteca usada no treino, e outro compara o CRC
+em C++ com uma implementação em Python.
+
+\section{Limites das práticas}
+\label{sec:ape-limites}
+
+Essas práticas não substituem redundância de \emph{hardware}, e a suposição de independência
+entre versões diversas de \emph{software} não se confirmou empiricamente \cite{knight1986}. Os
+testes no computador não cobrem o comportamento do rádio nem o do sensor.
+\emandamento{Nenhum registro de bancada provoca uma falha de propósito para testar a propagação
+de erro no dispositivo.}

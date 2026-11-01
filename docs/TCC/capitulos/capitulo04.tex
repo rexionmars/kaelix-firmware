@@ -1,23 +1,18 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Capítulo 4 --- Resultados e discussão
+%% Seção 4 --- Resultados e discussão
 %%
-%% Organizado pela ordem de precedência da cadeia, como o Capítulo 1 promete:
-%% aquisição -> estimação -> implantação, e então o confronto com a literatura.
+%% Mesma ordem da seção de métodos: aquisição, estimação, ensaio de bancada e
+%% comparação com a literatura. A origem de cada resultado (sinal sintetizado,
+%% dado real decimado ou registro de bancada) é informada no próprio texto e nas
+%% notas das tabelas e figuras.
 %%
-%% MARCAÇÃO DE PROCEDÊNCIA POR NÚMERO -----------------------------------------
-%% Requisito estrutural deste capítulo, não recomendação de estilo.
-%%
-%% Os cinco relatórios de origem têm, cada um, procedência homogênea, declarada
-%% uma vez no escopo --- exceto a revisão de literatura, que mistura as três. Os
-%% três defeitos de procedência encontrados na auditoria estavam todos nela, e
-%% em nenhum dos outros quatro. Este capítulo reproduz a condição de risco: ele
-%% mistura as três procedências em texto corrido. Por isso a marcação é POR
-%% NÚMERO (\pS, \pM, \pE) e não por seção.
-%%
-%% \pS  sinal sintetizado a partir do modelo da Seção 3.2
-%% \pM  dado real de bancada instrumentada, decimado em software
-%% \pE  modelagem ou cálculo sobre as especificações de projeto
-%%
+%% Fontes dos valores:
+%%   sinal sintetizado    experiments/figures/data/fig1*.csv e fig2*.csv
+%%                        (scripts/export_source_data.py)
+%%   dado real decimado   experiments/figures/data/tab_deteccao_*.csv
+%%                        (scripts/export_deteccao_data.py)
+%%   bancada              logs/device-monitor-261011-155502.log e
+%%                        logs/c3-device-validation-20261024-183820.log
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \makeatletter
@@ -26,11 +21,6 @@
   \newcommand{\toprule}{\hline}%
   \newcommand{\midrule}{\hline}%
   \newcommand{\bottomrule}{\hline}%
-}{}
-\@ifundefined{pS}{%
-  \newcommand{\pS}{\textsuperscript{\textsf{S}}}%
-  \newcommand{\pM}{\textsuperscript{\textsf{M}}}%
-  \newcommand{\pE}{\textsuperscript{\textsf{E}}}%
 }{}
 \@ifundefined{emandamento}{%
   \@ifundefined{textcolor}%
@@ -44,409 +34,263 @@
 %% experiments/figures/ e uma segunda cópia divergiria em silêncio.
 %% Ajustar o prefixo abaixo se a pasta de compilação mudar de lugar.
 \providecommand{\kxfig}[1]{../../experiments/figures/output/#1}
-\providecommand{\kxhw}[1]{../../#1}
 
 \chapter{Resultados e discussão}
 \label{cap:resultados}
 
-\section{Procedência dos resultados}
+Em dado real decimado, a detecção foi de \SI{75,0 \pm 3,5}{\percent} para desbalanceamento
+e de no máximo \SI{20,7}{\percent} para defeito de rolamento sem massa de desbalanceamento
+sobreposta. Com o limiar padrão, o falso alarme foi de \SI{31,2 \pm 4,2}{\percent}, contra
+\SI{2,0 \pm 1,3}{\percent} com o limiar calibrado.
+
+\section{Origem dos resultados}
 \label{sec:proc}
 
-Os resultados deste capítulo não têm origem uniforme, e a distinção decide o que cada um
-sustenta. Três procedências se misturam no texto que segue, e cada valor numérico é
-marcado individualmente:
+Os resultados vêm de sinal sintetizado, de dado real decimado e de registros de bancada.
 
-\begin{description}
-  \item[\pS\ Sinal sintetizado.] Gerado pelo modelo de dois mecanismos descrito na
-        Seção~\ref{sec:dev-sinal}: harmônicas da rotação somadas a um trem de impulsos amortecidos que
-        modula uma ressonância estrutural, mais ruído gaussiano. Sustenta afirmações sobre
-        \emph{relações entre métodos} --- qual procedimento recupera o valor correto, qual
-        decisão altera o resultado e em que direção. Não sustenta afirmação sobre
-        desempenho em máquina.
-  \item[\pM\ Dado real decimado.] Sinais de bancada instrumentada, adquiridos em alta taxa
-        e decimados em \emph{software} para emular a banda do dispositivo. O que é
-        modelado é a aquisição, não o sinal. Sustenta afirmações sobre \emph{taxas de
-        detecção por modo de falha}.
-  \item[\pE\ Modelagem sobre especificação.] Fórmulas fechadas e cálculo sobre as cotas do
-        desenho e a configuração implementada, tomadas como dadas. Sustenta afirmações
-        sobre \emph{limites impostos pelo projeto}, dentro das condições de contorno
-        declaradas na Seção~\ref{sec:dev-mecanica}.
-\end{description}
+\textbf{Sinal sintetizado.} O sinal é gerado pelo modelo da seção~\ref{sec:dev-sinal}. Ele
+        permite comparar métodos, mas não indica o desempenho em uma máquina.
 
-\emandamento{Nenhuma das três é medição no dispositivo montado. A marcação por número, e
-não por seção, é requisito deste capítulo: valores das três procedências aparecem em
-parágrafos vizinhos, e foi exatamente essa vizinhança que produziu, nos relatórios de
-origem, três atribuições incorretas detectadas em auditoria.}
+\textbf{Dado real decimado.} As gravações vêm de uma bancada instrumentada e foram decimadas
+        em \emph{software} para a taxa do dispositivo. O sinal é medido, mas a aquisição é
+        simulada.
 
-\section{O que a aquisição permite medir}
+\textbf{Registro de bancada.} \emandamento{Os valores vêm do próprio dispositivo, sem motor
+        e sem falha induzida. Eles permitem avaliar a aquisição e a transmissão, mas não a
+        detecção.}
+
+\section{Limites da aquisição}
 \label{sec:res-aquisicao}
 
-\subsection{A banda do sensor descarta a evidência de defeito de rolamento}
+Com amostragem a \SI{1}{\kilo\hertz}, a ressonância em que aparece a energia do defeito de
+rolamento fica fora da banda. Em dado real decimado, na condição sem massa sobreposta, o
+desbalanceamento foi a única classe com detecção acima de \SI{20,7}{\percent}.
 
-O acelerômetro tem taxa máxima de amostragem de \SI{1}{\kilo\hertz}\pE, o que situa a
-frequência de Nyquist em \SI{500}{\hertz}\pE. A frequência característica de defeito de
-pista externa, \SI{104,6}{\hertz}\pE\ na geometria considerada, cai dentro dessa banda; a
-ressonância estrutural de \SI{3,5}{\kilo\hertz}\pS\ que carrega a informação diagnóstica
-não. O defeito repete dentro da banda, e a evidência do defeito não.
+\subsection{Banda e evidência de defeito de rolamento}
 
-Sobre o sinal sintetizado, o contraste entre as condições com e sem defeito foi de
-\num{413}\pS\ vezes por análise de envelope na banda de ressonância, amostrada a
-\SI{20}{\kilo\hertz}, contra \num{20}\pS\ vezes por espectro direto a \SI{1}{\kilo\hertz}.
-O par não isola o efeito da banda: entre as duas medidas mudam duas variáveis, a banda e o
-método de demodulação, e dois pontos não constituem uma função. Ele sustenta que a cadeia
-truncada perde contraste; não sustenta a atribuição quantitativa dessa perda à banda
-isoladamente.
+A taxa de \SI{1}{\kilo\hertz} põe a frequência de Nyquist em \SI{500}{\hertz}. A frequência
+característica de defeito de pista externa, de \SI{104,6}{\hertz} na geometria considerada,
+fica dentro dessa banda, mas a ressonância de \SI{3,5}{\kilo\hertz} do modelo de sinal fica
+fora.
 
-Um segundo efeito é de natureza distinta. Sem filtro passa-baixas configurado abaixo de
-$f_s/2$, a ressonância de \SI{3,5}{\kilo\hertz}\pS\ não desaparece: reaparece rebatida em
-\SI{500}{\hertz}\pS, frequência onde nada existe fisicamente. Descritores estatísticos
-medidos sobre esse sinal podem separar as classes por um mecanismo alheio à física do
-defeito --- uma medição ingênua pode funcionar pelos motivos errados e passar em validação.
+Em sinal sintetizado, o contraste entre as condições com e sem defeito foi de \num{413}
+vezes por análise de envelope na banda de ressonância, amostrada a \SI{20}{\kilo\hertz}, e
+de \num{20} vezes por espectro direto a \SI{1}{\kilo\hertz} (Figura~\ref{fig:banda}). As
+duas medidas diferem na banda e no método de demodulação, então esse par não permite dizer
+quanto da perda vem da banda.
+
+Sem filtro abaixo de $f_s/2$, a ressonância de \SI{3,5}{\kilo\hertz} reaparece rebatida em
+\SI{500}{\hertz}, onde não há nenhuma componente física. A \SI{1}{\kilo\hertz} com filtro, a
+curtose quase não mudou com o defeito, de \num{1,76} para \num{1,77}. Sem filtro, ela foi de
+\num{1,82} para \num{4,55}, valor próximo do obtido a \SI{20}{\kilo\hertz}. Assim, um detector
+pode separar as classes por causa do rebatimento e passar na validação. O MPU6050 sempre opera
+com o filtro interno, mas o fabricante não informa a atenuação desse filtro acima da banda
+(seção~\ref{sec:fund-mpu6050}), e este trabalho não a mediu.
 
 \begin{figure}[!htb]
+\caption{Efeito do limite de banda sobre a evidência de defeito de rolamento}
+\label{fig:banda}
 \centering
 \includegraphics[width=\textwidth]{\kxfig{fig1_banda_sensor.pdf}}
-\caption[O limite de banda descarta a evidência de defeito de rolamento]{\textbf{O limite de banda descarta a evidência de defeito de rolamento} (\pS).
-\textbf{a}, Densidade espectral de potência para rolamento sadio e com defeito de pista
-externa. A faixa sombreada marca a banda acessível ao dispositivo; os impactos excitam uma
-ressonância inteiramente fora dela. \textbf{b}, Razão entre as amplitudes na frequência
-característica nas duas condições. \textbf{c}, Razão entre as condições para quatro
-descritores de impacto; nenhum sobrevive à limitação de banda com antialiasing correto.
-\textbf{d}, Frequência aparente da ressonância após subamostragem sem filtro: a energia
-reaparece onde nada existe fisicamente.}
-\label{fig:banda}
+\fonte{Elaboração própria.}
+\legenda{Sinal sintetizado. \textbf{a}, Densidade espectral de potência para rolamento sadio e com defeito de pista externa, com eixo vertical em escala logarítmica. A faixa clara vai até \SI{500}{\hertz}, e a escura, até os \SI{184}{\hertz} do filtro usado no \emph{firmware}. \textbf{b}, Razão entre as amplitudes na frequência característica nas duas condições. \textbf{c}, Razão entre as condições para quatro descritores de impacto, calculados sobre \SI{2}{\second} de sinal; a linha tracejada marca a razão 1, sem separação. \textbf{d}, Frequência aparente da ressonância após subamostragem sem filtro.}
 \end{figure}
 
-\subsection{O que o dispositivo detecta, por modo de falha}
+\subsection{Detecção por modo de falha}
 
-Em dado real decimado, com o limiar calibrado para falso alarme alvo de \SI{1}{\percent},
-o falso alarme medido foi de $\num{2,0} \pm \num{1,3}\,\si{\percent}$\pM. Nesse ponto de
-operação, o quadro de detecção por classe é o da Tabela~\ref{tab:deteccao}.
+Em dado real decimado, com o limiar calibrado para falso alarme alvo de \SI{1}{\percent}, o
+falso alarme medido foi de \SI{2,0 \pm 1,3}{\percent} (média e desvio-padrão entre as cinco
+partições). A Tabela~\ref{tab:deteccao} mostra a detecção por classe nesse ponto de
+operação.
 
 \begin{table}[!htb]
-\centering
-\caption{Detecção por modo de falha a \SI{2}{\percent} de falso alarme medido, em dado
-real decimado (\pM). Desvio entre partições onde registrado. As duas classes de rolamento
-correspondem à condição sem massa de desbalanceamento sobreposta.}
-\label{tab:deteccao}
-\small
+\IBGEtab{%
+\caption{Detecção por modo de falha a \SI{2}{\percent} de falso alarme medido, em dado real decimado}%
+\label{tab:deteccao}%
+}{%
 \begin{tabular}{lc}
 \toprule
-Modo de falha & Detecção \\
+Modo de falha & Detecção (\si{\percent}) \\
 \midrule
-Desbalanceamento                      & $\num{75,0} \pm \num{3,5}\,\si{\percent}$ \\
-Rolamento \emph{overhang} (puro)      & \SI{20,7}{\percent} \\
-Rolamento \emph{underhang} (puro)     & \SI{14,8}{\percent} \\
-Desalinhamento vertical               & $\num{7,2} \pm \num{4,3}\,\si{\percent}$ \\
-Desalinhamento horizontal             & $\num{5,0} \pm \num{3,1}\,\si{\percent}$ \\
+Desbalanceamento                      & \num{75,0 \pm 3,5} \\
+Rolamento \emph{overhang} (puro)      & \num{20,7 \pm 7,0} \\
+Rolamento \emph{underhang} (puro)     & \num{14,8 \pm 4,3} \\
+Desalinhamento vertical               & \num{7,2 \pm 4,3} \\
+Desalinhamento horizontal             & \num{5,0 \pm 3,1} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}{%
+\fonte{Elaboração própria, com dados de \citeonline{mafaulda}.}%
+\nota{A incerteza é o desvio-padrão entre as cinco partições. As duas classes de rolamento correspondem à condição sem massa de desbalanceamento sobreposta.}%
+}
 \end{table}
 
-Apenas o desbalanceamento é detectado de forma útil. As demais classes ficam próximas do
-piso, e duas observações sobre a tabela importam mais que os valores.
+Nas duas classes de desalinhamento, o desvio entre partições é da ordem do próprio valor, e
+\SI{7,2 \pm 4,3}{\percent} admite valores próximos de zero. Por isso, conclusões baseadas
+nesses dois números são fracas (seção~\ref{sec:res-discussao}).
 
-A primeira é sobre a dispersão. Nas duas classes de desalinhamento, o desvio entre
-partições é da ordem do próprio valor: $\num{7,2} \pm \num{4,3}\,\si{\percent}$\pM\
-admite intervalo que se aproxima de zero. Qualquer afirmação construída sobre esses dois
-números é hipótese sustentada por evidência fraca, e não medição, e assim é tratada na
-Seção~\ref{sec:res-discussao}.
+As classes de rolamento foram ensaiadas com \SI{0}{\gram}, \SI{6}{\gram}, \SI{20}{\gram} e \SI{35}{\gram} de massa de
+desbalanceamento sobreposta, e a detecção foi maior nas massas maiores. Na classe
+\emph{underhang}, ela passou de \SI{14,8}{\percent} sem massa para \SI{87,3}{\percent} com
+\SI{35}{\gram}. Na classe \emph{overhang}, passou de \SI{20,7}{\percent} para
+\SI{78,3}{\percent}. Os agregados das quatro condições são de \SI{55,9}{\percent} e
+\SI{42,2}{\percent}, mas esses números não podem ser lidos como detecção de defeito de
+rolamento, porque o modelo parece responder à massa adicionada.
 
-A segunda é sobre estratificação. As classes de rolamento foram ensaiadas em quatro níveis
-de massa de desbalanceamento sobreposta, e a detecção acompanha a massa, não o defeito:
-sobe de \SI{14,8}{\percent}\pM\ sem massa para \SI{87,3}{\percent}\pM\ no maior nível, na
-classe \emph{underhang}. Reportar o agregado das quatro condições --- \SI{42,6}{\percent}\pM\
---- como ``detecção de defeito de rolamento'' produziria exatamente o tipo de número
-inflado que a Seção~\ref{sec:res-estimacao} documenta em outro contexto. O padrão indica
-que, nos arquivos de rolamento, o modelo responde à massa adicionada, e não ao defeito.
-
-\subsection{O invólucro filtra o sinal antes que ele alcance o sensor}
-
-O invólucro integra a cadeia de medição, e não apenas a protege. A rigidez do caminho entre
-a superfície do motor e o sensor resultou em \SI{1,45e6}{\newton\per\meter}\pE, o que para
-uma massa de \SI{118}{\gram}\pE\ situa a frequência de montagem em \SI{557}{\hertz}\pE,
-dentro da banda de medição. A transmissibilidade atinge aproximadamente cinco vezes em
-\SI{500}{\hertz}\pE\ e o erro de amplitude ultrapassa \SI{10}{\percent} já em
-\SI{168}{\hertz}\pE. A prática consolidada em acelerometria exigiria frequência de montagem
-de ao menos \SI{3}{\kilo\hertz} para a banda normativa.
-
-A decomposição da flexibilidade localiza o problema: a base responde por
-\SI{51,1}{\percent}\pE\ e o corpo por \SI{48,5}{\percent}\pE, contra \SI{0,4}{\percent}\pE\
-do ressalto. O resultado é pouco sensível à incerteza da espessura da base --- dobrando-a,
-a frequência sobe apenas para \SI{750}{\hertz}\pE\ --- e a mesma geometria em alumínio
-alcançaria \SI{3273}{\hertz}\pE. Duas hipóteses concorrentes foram testadas e descartadas:
-a curvatura da carcaça, que reduz a retenção magnética entre \num{7} e \SI{30}{\percent}\pE\
-preservando margem próxima de duas vezes a força inercial, e os modos próprios dos painéis,
-situados acima de \SI{1300}{\hertz}\pE.
-
-\begin{figure}[!htb]
-\centering
-\includegraphics[width=\textwidth]{\kxfig{fig3_involucro.pdf}}
-\caption[O caminho elástico coloca a frequência de montagem dentro da banda]{\textbf{O caminho elástico coloca a frequência de montagem dentro da banda de
-medição} (\pE). O caminho motor--base--ressalto--corpo--sensor resulta em frequência de
-montagem de \SI{557}{\hertz}, com erro de amplitude acima de \SI{10}{\percent} a partir de
-\SI{168}{\hertz}. A decomposição da flexibilidade mostra que base e corpo respondem por
-praticamente toda ela. Os painéis correspondentes a fixação magnética e a modos de placa
-são hipóteses testadas e descartadas.}
-\label{fig:involucro}
-\end{figure}
-
-\begin{figure}[!htb]
-\centering
-\includegraphics[width=0.92\textwidth]{\kxfig{fig10_vibracao.pdf}}
-\caption[Transmissibilidade do caminho de montagem e margem de fadiga]{Transmissibilidade do caminho de montagem, margem de fadiga de junta de solda por
-componente e sensibilidade ao amortecimento e à severidade da excitação (\pE).}
-\label{fig:vibracao}
-\end{figure}
-
-\begin{figure}[!htb]
-\centering
-\includegraphics[height=0.62\textheight]{\kxhw{hardware/fem/figuras/modos.png}}
-\caption[Formas modais da placa e do caminho de montagem]{Formas modais da placa e do
-caminho de montagem, obtidas por elementos finitos (\pE). A amplitude do autovetor é
-arbitrária; a informação está na distribuição.}
-\label{fig:modos}
-\end{figure}
-
-\section{O que a estimação decide}
+\section{Decisões de estimação}
 \label{sec:res-estimacao}
 
-Quatro decisões deste elo --- método de integração, política de limiar, métrica e
-protocolo de validação --- alteraram os resultados por margens maiores que o efeito físico
-sob investigação. Todos os valores desta seção são de sinal sintetizado, e o que eles sustentam
-é a relação entre métodos, não o desempenho do dispositivo.
-
-\subsection{A norma exige velocidade, e a integração precisa ser feita na frequência}
-
-A norma define as zonas de severidade em velocidade eficaz, e o acelerômetro entrega
-aceleração. Contra uma senoide de \SI{3,0}{\meter\per\second\squared} a \SI{50}{\hertz},
-cuja integral é conhecida analiticamente e vale \SI{6,7524}{\milli\meter\per\second}, os
-métodos comparam-se como na Tabela~\ref{tab:res-integracao}.
-
-\begin{table}[!htb]
-\centering
-\caption{Velocidade eficaz por variante de integração, contra o valor analítico exato
-(\pS).}
-\label{tab:res-integracao}
-\small
-\begin{tabular}{lcc}
-\toprule
-Método & Resultado (\si{\milli\meter\per\second}) & Erro \\
-\midrule
-Integração no tempo, sem passa-alta          & \num{11,69}  & $+\SI{73}{\percent}$ \\
-Integração no tempo, com passa-alta          & \num{17,31}  & $+\SI{156}{\percent}$ \\
-\textbf{Integração na frequência, banda ISO} & \num{6,7525} & \textbf{\SI{0,0}{\percent}} \\
-Na frequência, com viés de \SI{0,02}{\meter\per\second\squared} & \num{6,7525} & \SI{0,0}{\percent} \\
-No tempo sem passa-alta, com o mesmo viés    & \num{55,08}  & $+\SI{716}{\percent}$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Dois resultados são contraintuitivos. O filtro passa-alta não corrige a integração no
-tempo e chega a piorá-la, porque a soma cumulativa continua acumulando o transiente de
-borda do filtro. E um viés de \SI{0,02}{\meter\per\second\squared}\pE, valor contido na
-especificação do sensor, leva o resultado a \SI{55,08}{\milli\meter\per\second}\pS\ quando
-o correto é \num{6,75}. O valor correto fica abaixo do limite entre as zonas C e D em três
-das quatro combinações de grupo de máquina e tipo de fundação da norma; o valor obtido
-excede esse limite em todas, e o sinal seria classificado na zona D qualquer que fosse a
-máquina. A integração na frequência permanece exata sob o mesmo viés, porque o termo
-contínuo cai fora da máscara imposta pela própria norma.
-
-\subsection{O limiar padrão produz falso alarme incompatível com operação}
-
-Treinado exclusivamente com dados de operação normal, o detector com o valor padrão do
-parâmetro de contaminação classificou \SI{42,1}{\percent}\pS\ das janelas normais como
-anomalia. Com o parâmetro fixado em \num{0,01}, o falso alarme caiu para
-\SI{1,4}{\percent}\pS. A taxa de detecção permaneceu em \SI{100}{\percent}\pS\ e a área sob
-a curva ROC em \num{1,000}\pS\ nos quatro valores testados.
-
-Detecção unitária e área unitária são condições que nenhum conjunto real produz, e marcam
-o alcance deste resultado: ele demonstra que o parâmetro desloca o corte sem alterar o
-ranqueamento do detector, e é essa propriedade --- não o valor \SI{42}{\percent} --- que se
-transporta para dado real.
-
-\subsection{A métrica global não caracteriza o ponto de operação}
-
-Sobre defeito incipiente, com descritores e modelo idênticos, a área sob a curva completa
-caiu \SI{3,7}{\percent}\pS\ entre a cadeia de referência e a do dispositivo, enquanto a
-área parcial restrita à região de falso alarme baixo caiu \SI{16,2}{\percent}\pS\ a
-\SI{10}{\percent} de falso alarme e \SI{20,3}{\percent}\pS\ a \SI{5}{\percent}. A perda na
-região em que um dispositivo de campo precisa operar é de \num{4,4} a \num{5,5} vezes a que
-a área global indica.
-
-\subsection{O protocolo de validação infla a acurácia}
-
-Janelas consecutivas de um mesmo ensaio compartilham a assinatura da montagem --- nível de
-ruído, ganho do sensor e condição de aperto. Divididas aleatoriamente entre treino e teste,
-permitem que o modelo identifique o ensaio em vez da falha. O mesmo modelo, sobre os mesmos
-dados e os mesmos descritores, atingiu \SI{99,0}{\percent}\pS\ de acurácia sob divisão
-aleatória por janela e $\num{63,2} \pm \num{19,2}\,\si{\percent}$\pS\ sob divisão por
-ensaio: inflação de aproximadamente \num{36} pontos percentuais.
-
-A distribuição entre partições revela o mecanismo. Três das cinco ficaram próximas de
-\num{0,50}\pS, o nível do acerto ao acaso, enquanto uma alcançou \num{1,00}\pS. O desvio
-entre partições indica ausência de generalização --- informação que a média única do
-protocolo incorreto suprime.
+Quatro decisões alteraram os resultados: o método de integração, o limiar, a métrica e o
+protocolo de validação (Figura~\ref{fig:metodologia}). Exceto onde indicado, os valores desta
+seção vêm de sinal sintetizado.
 
 \begin{figure}[!htb]
+\caption{Efeito de quatro escolhas metodológicas sobre os resultados}
+\label{fig:metodologia}
 \centering
 \includegraphics[width=\textwidth]{\kxfig{fig2_metodologia.pdf}}
-\caption[Quatro escolhas metodológicas alteram os resultados mais que o efeito medido]{\textbf{Quatro escolhas metodológicas alteram os resultados mais do que o efeito
-medido} (\pS). \textbf{a}, Velocidade eficaz por cinco variantes de integração contra o
-valor analítico exato; apenas a integração no domínio da frequência o recupera.
-\textbf{b}, Deriva causada por viés contido na especificação do sensor. \textbf{c},
-Acurácia do mesmo modelo sobre os mesmos dados, variando apenas a estratégia de partição;
-pontos indicam as partições individuais. \textbf{d}, Fração da operação normal classificada
-como anomalia por valor do parâmetro de contaminação. \textbf{e}, Curvas ROC por banda de
-aquisição; a faixa sombreada marca a região de operação realista.}
-\label{fig:metodologia}
+\fonte{Elaboração própria.}
+\legenda{Sinal sintetizado. \textbf{a}, Velocidade eficaz por cinco variantes de integração, comparada com o valor analítico (linha tracejada), com soma acumulada sem remoção da média nas variantes no tempo. \textbf{b}, Velocidade sob viés de \SI{0,02}{\meter\per\second\squared}. \textbf{c}, Acurácia de um Random Forest supervisionado sobre os mesmos dados, variando a forma de partição; as barras de erro são o desvio-padrão ($n = 10$ sorteios e $n = 5$ partições), e os pontos, as partições individuais. \textbf{d}, Fração das janelas normais do ajuste classificada como anomalia, por valor do parâmetro de contaminação. \textbf{e}, Curvas ROC (característica de operação do receptor) em defeito incipiente; a faixa marca falso alarme de até \SI{10}{\percent}, usado na área parcial (pAUC).}
 \end{figure}
 
-\section{O que a implantação impõe}
-\label{sec:res-implantacao}
+\subsection{Integração de aceleração para velocidade}
 
-\subsection{A carga da bateria, e não o invólucro, define a margem térmica}
+A norma define as zonas de severidade em velocidade eficaz, e o acelerômetro entrega
+aceleração, então o sinal precisa ser integrado. A Tabela~\ref{tab:res-integracao} compara os
+métodos contra uma senoide de \SI{3,0}{\meter\per\second\squared} a \SI{50}{\hertz}, cuja
+integral é conhecida e tem valor eficaz de \SI{6,7524}{\milli\meter\per\second}.
 
-A hipótese inicial atribuía ao material do invólucro o papel de elo térmico mais frágil. A
-análise inverteu essa leitura. A resistência térmica do caminho condutivo em ASA é de
-\SI{88,8}{\kelvin\per\watt}\pE, contra \SI{0,074}{\kelvin\per\watt}\pE\ em alumínio, uma
-razão de \num{1206}\pE\ vezes. Com base em alumínio, a temperatura interna alcançaria
-\SI{79,0}{\celsius}\pE\ com a carcaça a \SI{80}{\celsius}. Com base em ASA, o balanço
-térmico resolvido até a convergência dá \SI{33,0}{\celsius}\pE\ com a carcaça a
-\SI{80}{\celsius}, e o modelo tridimensional do invólucro situa a placa entre
-\SI{35,1}{\celsius}\pE\ e \SI{38,3}{\celsius}\pE\ com a carcaça a \SI{90}{\celsius}.
+\begin{table}[!htb]
+\IBGEtab{%
+\caption{Velocidade eficaz por variante de integração, em relação ao valor analítico}%
+\label{tab:res-integracao}%
+}{%
+\begin{tabular}{lcc}
+\toprule
+Método & Resultado (\si{\milli\meter\per\second}) & Erro (\si{\percent}) \\
+\midrule
+Soma acumulada, sem filtro passa-alta               & \num{11,69} & $+\num{73}$ \\
+Soma acumulada, com filtro passa-alta               & \num{17,31} & $+\num{156}$ \\
+\textbf{Integração na frequência, banda normativa}  & \num{6,75}  & \textbf{\num{0}} \\
+Na frequência, com viés de \SI{0,02}{\meter\per\second\squared} & \num{6,75} & \num{0} \\
+Soma acumulada, sem filtro, com o mesmo viés        & \num{55,08} & $+\num{716}$ \\
+\bottomrule
+\end{tabular}%
+}{%
+\fonte{Elaboração própria.}%
+\nota{Sinal sintetizado, a \SI{5}{\kilo\hertz} durante \SI{4}{\second}. Erro em relação ao valor analítico, arredondado para inteiro. A soma acumulada parte de zero, sem remoção da média.}%
+}
+\end{table}
 
-Em operação, nenhum limite é atingido até \SI{90}{\celsius} de carcaça: a placa permanece
-abaixo tanto dos \SI{45}{\celsius} admitidos na carga da célula quanto dos
-\SI{60}{\celsius} admitidos na descarga. O autoaquecimento é irrelevante em operação: a
-potência média de \SI{2,0}{\milli\watt}\pE\ eleva a temperatura interna em
-\SI{0,01}{\celsius}\pE, e todo o calor provém do exterior.
+A soma acumulada parte de zero e deixa a constante de integração na média da velocidade, de
+\SI{9,55}{\milli\meter\per\second}. Daí vem o erro: $\sqrt{\num{6,75}^2 + \num{9,55}^2} =
+\SI{11,69}{\milli\meter\per\second}$. Com a média removida, o erro cai para
+\SI{0,02}{\percent} sem filtro e para \SI{1,6}{\percent} com filtro. Um viés de
+\SI{0,02}{\meter\per\second\squared}, contido na especificação do sensor, levou a soma a
+\SI{55,08}{\milli\meter\per\second}, e a remoção da tendência linear também trouxe esse valor
+de volta a \SI{6,75}{\milli\meter\per\second}. Sem esse cuidado, o sinal seria classificado na
+zona D em qualquer máquina, enquanto o valor correto fica abaixo do limite entre as zonas C e
+D em três das quatro combinações da norma.
 
-\emandamento{Durante a carga da bateria, não. O carregador linear da placa v3 dissipa cerca
-de \SI{0,41}{\watt}\pE\ no pior ponto de uma carga a \SI{200}{\milli\ampere}, dentro do
-invólucro fechado, e o modelo tridimensional eleva a placa em cerca de
-\SI{15}{\kelvin}\pE\ por watt. O limite que restringe passa a ser o de carga da célula,
-\SI{45}{\celsius}, e somente nessa fase: restam \SI{8,3}{\kelvin}\pE\ de folga com o
-dispositivo fora do motor e de \SIrange{0,7}{3,9}{\kelvin}\pE\ com o motor a
-\SI{90}{\celsius}. Esta última folga é otimista, porque o modelo aplica à troca entre a
-placa e a cavidade o coeficiente de convecção da face externa, e a convecção dentro da
-cavidade é mais fraca; a folga real pode ser nula. Na placa v3, o limite é imposto pelo
-próprio carregador, que suspende a carga acima de \SI{45}{\celsius} e a retoma ao esfriar.
-O procedimento recomendado é carregar o dispositivo fora do motor ou com o motor parado.}
+A integração na frequência deu \SI{6,7525}{\milli\meter\per\second}, a menos de
+\SI{0,01}{\percent} do valor analítico, com e sem o viés, porque o termo contínuo fica fora da
+banda normativa. Nesse ensaio, os \SI{50}{\hertz} coincidem com um coeficiente exato da DFT, e
+os \SI{4}{\second} de registro são mais longos que a janela de \SI{0,512}{\second} do
+dispositivo.
 
-Os demais limites ficam bem acima: circuitos integrados em \SI{85}{\celsius}, deformação
-térmica do ASA em \SI{98}{\celsius} e ímãs em \SI{150}{\celsius}. A consequência de projeto
-é um conflito entre elos: substituir o ASA por alumínio resolveria a limitação mecânica da
-Seção~\ref{sec:res-aquisicao} e agravaria a térmica, levando a temperatura interna a
-\SI{79,0}{\celsius}\pE\ sob a mesma carcaça, acima dos limites de carga e de descarga da
-célula. Os dois requisitos recaem sobre a mesma peça e apontam em sentidos opostos.
+\subsection{Limiar e falso alarme}
 
-\begin{figure}[!htb]
-\centering
-\includegraphics[width=\textwidth]{\kxfig{fig4_termica.pdf}}
-\caption[O invólucro isola a eletrônica da carcaça]{\textbf{O invólucro isola a eletrônica
-da carcaça} (\pE). Por ser mau condutor, o polímero do invólucro mantém a eletrônica abaixo
-de todos os limites em operação. Os painéis \textbf{a} e \textbf{b} ainda apresentam o valor
-do modelo concentrado não convergido, \SI{44,8}{\celsius} com a carcaça a
-\SI{80}{\celsius}; o balanço convergido dá \SI{33,0}{\celsius}, e o modelo tridimensional
-situa a placa entre \SI{35,1}{\celsius} e \SI{38,3}{\celsius} com a carcaça a
-\SI{90}{\celsius}.}
-\label{fig:termica}
-\end{figure}
+Em dado real decimado, avaliado em arquivos fora do treino, o limiar padrão de \num{0,5} marcou
+\SI{31,2 \pm 4,2}{\percent} da operação normal como anomalia, e o limiar calibrado marcou
+\SI{2,0 \pm 1,3}{\percent}.
 
-\begin{figure}[!htb]
-\centering
-\includegraphics[width=0.90\textwidth]{\kxfig{fig11_termica3d.pdf}}
-\caption[Perfil de temperatura e transiente da parede da cavidade]{Perfil de temperatura ao longo da altura, transiente da parede da cavidade e
-comparação com o modelo concentrado (\pE).}
-\label{fig:termica3d}
-\end{figure}
+Em sinal sintetizado, na cadeia de \SI{20}{\kilo\hertz}, o valor padrão do parâmetro de
+contaminação marcou \SI{42,1}{\percent} das \num{140} janelas normais, e o valor \num{0,01}
+marcou \SI{1,4}{\percent}. Essas taxas foram medidas nas próprias janelas do ajuste. Quando um
+ensaio normal ficou fora do treino, os dois valores marcaram \SI{100}{\percent} das janelas nas
+cinco rodadas. Os ensaios sintetizados têm ganhos diferentes, e o limiar ajustado em quatro deles
+não serviu para o quinto.
 
-\begin{figure}[!htb]
-\centering
-\includegraphics[height=0.48\textheight]{\kxhw{hardware/fem/figuras/termica.png}}
-\caption[Campo de temperatura em corte]{Campo de temperatura em corte (\pE). A placa não
-integra o modelo de elementos finitos; sua temperatura provém de balanço radiativo
-calculado separadamente.}
-\label{fig:termicafem}
-\end{figure}
+Nos cinco valores testados, os escores foram idênticos, e só o deslocamento do limiar mudou. A
+detecção ficou em \SI{100}{\percent} e a área sob a curva ROC em \num{1,000}, porque as classes
+estão perfeitamente separadas nesse sinal, o que é improvável em dado real. O valor de
+\SI{42}{\percent} vale só para este sinal.
 
-\subsection{O enlace impõe um compromisso entre alcance e autonomia}
+\subsection{Métrica global e métrica no ponto de operação}
 
-Os parâmetros do enlace foram fixados explicitamente, em vez de herdados do padrão da
-biblioteca --- condição para que uma atualização não altere o consumo do produto sem que a
-mudança seja detectável. O tempo no ar resultante é de \SI{185}{\milli\second}\pE, contra
-os \SI{150}{\milli\second} que a estimativa inicial de consumo assumia sem derivação.
+Em defeito incipiente, a área sob a curva completa caiu de \num{1,000} para \num{0,963} entre as
+cadeias de \SI{20}{\kilo\hertz} e de \SI{1}{\kilo\hertz}, uma queda de \SI{3,7}{\percent}. A área
+parcial caiu de \num{0,999} para \num{0,837} com limite de \SI{10}{\percent} de falso alarme, uma
+queda de \SI{16,2}{\percent}, e de \num{0,998} para \num{0,795} com limite de \SI{5}{\percent}, uma
+queda de \SI{20,3}{\percent}. Na região de baixo falso alarme, a queda relativa foi de \num{4,4} a
+\num{5,5} vezes a indicada pela área global.
 
-O custo em autonomia é direto: \SI{256}{\day}\pE\ no fator de espalhamento mais baixo
-contra \SI{138}{\day}\pE\ no mais alto, com \SI{12,5}{\decibel} de ganho entre os extremos.
-A comparação com Wi-Fi, modelada em \SI{5}{\second} a \SI{150}{\milli\ampere} por
-transmissão, resulta em \SI{44}{\day}\pE\ contra \SI{236}{\day}\pE\ no enlace adotado.
-Manter o rádio em \emph{standby} durante o repouso, em vez de colocá-lo em \emph{sleep},
-resulta em \SI{45}{\day}\pE\ --- custo energético equivalente ao de adotar Wi-Fi.
+A cadeia de \SI{20}{\kilo\hertz} usa nove descritores e a de
+\SI{1}{\kilo\hertz} usa sete, então a queda mistura o efeito da banda e o dos descritores. As áreas
+foram calculadas sobre as janelas normais do ajuste e as janelas com defeito. Pela forma do desafio
+de referência, dividida só por $\beta$, as quedas seriam de \SI{30,8}{\percent} e
+\SI{39,7}{\percent}, o que muda os valores, mas não o sentido da comparação.
 
-\begin{figure}[!htb]
-\centering
-\includegraphics[width=0.92\textwidth]{\kxfig{fig7_gateway.pdf}}
-\caption[Cadeia de comunicação exercitada por simulação de meio]{Cadeia de comunicação exercitada por simulação de meio (\pE), com injeção de
-colisão, perda e corrupção de bit. \emandamento{A simulação não cobre propagação: alcance e
-margem de enlace dependem de medição em campo.}}
-\label{fig:gateway}
-\end{figure}
-\emandamento{A decisão definitiva depende da distância até o receptor, ainda não medida.}
+\subsection{Partição por janela e partição por ensaio}
 
-\section{Confronto com a literatura}
+Um Random Forest supervisionado, sobre os mesmos dados e os mesmos descritores, atingiu
+\SI{99,0 \pm 1,0}{\percent} de acurácia sob partição aleatória por janela e
+\SI{63,2 \pm 19,2}{\percent} sob partição por ensaio, uma diferença de aproximadamente \num{36}
+pontos percentuais. Na partição por ensaio, três das cinco partições ficaram próximas de
+\SI{50}{\percent}, o nível do acerto ao acaso, e uma alcançou \SI{100}{\percent}. As janelas têm
+\SI{50}{\percent} de sobreposição, o que favorece a partição aleatória, porque janelas quase iguais
+ficam no treino e no teste.
+
+\section{Ensaio de bancada}
+\label{sec:res-bancada}
+
+\emandamento{No registro de 11 de outubro de 2026, com um ESP32-S3 como transmissor e um ESP32-C3
+como receptor, o receptor aceitou \num{270} pacotes em \SI{62}{\minute}, todos com CRC de 16 bits
+correto. Houve um erro de CRC no próprio rádio, que corresponde ao único pacote perdido. A contagem de
+sequência recomeçou em 1 uma vez, e o receptor ficou \SI{13,4}{\minute} sem pacotes nesse intervalo. A
+intensidade do sinal recebido ficou entre \SI{-73}{dBm} e \SI{-55}{dBm}, e a relação sinal-ruído,
+entre \SI{9,5}{\decibel} e \SI{14}{\decibel}. Antes do primeiro pacote, o receptor registrou uma
+instabilidade no barramento SPI e reiniciou o rádio. A distância entre os módulos não foi registrada.}
+
+\emandamento{No registro de 24 de outubro de 2026, com um ESP32-C3 como transmissor, os três ciclos
+gravados terminaram sem erro. A taxa de amostragem estimada ficou entre \SI{999,78}{\hertz} e
+\SI{999,88}{\hertz}, com desvio máximo de \SI{0,022}{\percent}, abaixo do limite de
+\SI{2}{\percent}. O intervalo entre transmissões foi de \SI{11,0}{\second}, e a fase de transmissão
+durou cerca de \SI{195}{\milli\second}, próximo dos \SI{185}{\milli\second} calculados na
+seção~\ref{sec:fund-lora}.}
+
+\emandamento{Os dois registros vêm de montagens diferentes, e o segundo tem só três ciclos. Eles
+indicam que a aquisição e a transmissão funcionam em bancada, mas ainda não permitem avaliar H6 por
+completo. A escolha final do fator de espalhamento depende da distância até o receptor, que ainda não
+foi medida.}
+
+\section{Comparação com a literatura}
 \label{sec:res-discussao}
 
-\subsection{Convergências}
+A diferença de \num{36} pontos percentuais entre as duas formas de partição tem correlato na
+literatura, que mede diferenças da ordem de dezenas de pontos percentuais em uma base pública de
+rolamentos~\cite{varejao2025,vieira2026}. A concordância é de direção e de ordem de grandeza, porque
+o valor deste trabalho vem de sinal sintetizado e de um classificador supervisionado.
 
-O achado de inflação por vazamento de assinatura de montagem tem correlato direto: a
-literatura mede inflação da ordem de dezenas de pontos percentuais em uma base de referência
-consolidada, e relata que \num{40} de \num{41} estudos revisados sobre essa base adotaram
-delineamento suscetível ao problema~\cite{varejao2025,vieira2026}. A convergência é de
-direção e de ordem de grandeza: os \num{36} pontos\pS\ obtidos aqui vêm de sinal
-sintetizado, e os valores publicados, de dado medido.
+Outros autores também separam desbalanceamento e rolamento no projeto do nó. Um nó publicado usa um
+acelerômetro de banda estreita para desbalanceamento e outro de dezenas de quilohertz para
+rolamento~\cite{jakobsen2024}, e o trabalho mais próximo em arquitetura demonstra desbalanceamento e
+deixa rolamento para depois~\cite{kolok2025}.
 
-A fronteira de detecção encontrada reproduz, em dado real decimado, a divisão de trabalho que a
-literatura implementou por projeto. Um nó publicado reserva um acelerômetro de banda
-estreita para desbalanceamento e outro de dezenas de quilohertz para
-rolamento~\cite{jakobsen2024}, e o trabalho mais próximo em arquitetura demonstra
-desbalanceamento e adia rolamento~\cite{kolok2025}. Três caminhos independentes chegam à
-mesma fronteira.
+O falso alarme de \SI{31,2}{\percent} com o limiar padrão, em dado real, fica próximo das
+implementações embarcadas publicadas, que relatam de \SI{22}{\percent} a \SI{38}{\percent} sobre
+operação normal~\cite{chevtchenko2023,kolok2025}. Esses trabalhos usam conjuntos, máquinas e limiares
+diferentes, e a comparação serve só como ordem de grandeza.
 
-\subsection{Fragilidades desta análise}
+Os resultados de detecção não mostram que a banda seja a causa da baixa detecção de rolamento. O
+detector marca afastamento da operação normal e não identifica o tipo de defeito. Os quatro descritores
+não medem a linha na frequência característica, embora o espectro direto a \SI{1}{\kilo\hertz} tenha
+mostrado contraste de \num{20} vezes nessa linha em sinal sintetizado. O desalinhamento, que aparece
+dentro da banda, teve detecção menor (\SI{5,0}{\percent} e \SI{7,2}{\percent}) que o defeito de
+rolamento (\SI{14,8}{\percent} e \SI{20,7}{\percent}). Além disso, todas as classes usam o mesmo canal
+da bancada, o sensor radial do lado \emph{underhang}, mesmo no defeito \emph{overhang}.
 
-O problema de calibração do limiar não é anomalia deste projeto: o escore do detector tem
-\num{0,5} como referência interpretativa e não como corte calibrado~\cite{liu2008}, e a
-implementação de referência transporta essa interpretação para um deslocamento
-fixo~\cite{scikitlearn2026}. O resultado de \SI{42}{\percent}\pS\ obtido aqui vem de sinal
-sintetizado, com detecção unitária, e por isso demonstra que a política padrão falha por
-construção --- não que o dispositivo reproduza em máquina o falso alarme das implementações
-publicadas, que se situam entre \num{22} e \SI{38}{\percent} sobre operação
-normal~\cite{chevtchenko2023,kolok2025}. A comparação é de ordem de grandeza entre
-conjuntos, máquinas e limiares diferentes.
-
-A afirmação de que o desalinhamento falha por escolha de descritor, e não por banda, é a
-observação mais original deste trabalho e a que se apoia na evidência mais frágil. O
-mecanismo é claro: o desalinhamento se manifesta em harmônicas da rotação, muito abaixo de
-\SI{500}{\hertz}, e portanto dentro da banda; a assinatura é a razão entre as linhas de
-duas vezes e uma vez a rotação, que valor eficaz, curtose, fator de crista e frequência
-dominante não capturam. Mas a detecção medida, $\num{7,2} \pm \num{4,3}\,\si{\percent}$\pM,
-tem incerteza da ordem do próprio valor. A afirmação é mantida como hipótese acionável, com
-o experimento que a testaria enunciado no Capítulo~\ref{cap:conclusoes}, e não como
-resultado estabelecido.
-
-\subsection{Escolhas de hardware contestadas}
-
-A bateria recarregável contraria a prática estabelecida na literatura de nós de
-monitoramento, que adota célula primária de longa duração~\cite{nabavi2025}. A escolha
-introduz a restrição térmica de carga documentada na Seção~\ref{sec:res-implantacao}, que é
-o limite de operação do dispositivo, e nenhum dos sistemas comparáveis a possui.
-
-Sobre a banda, a objeção da literatura é direta e não admite contorno por
-\emph{software}: nenhum estudo de adequação revisado testou sensor com limite superior
-abaixo de \SI{1500}{\hertz}~\cite{albarbar2008}, e os grupos que diagnosticam rolamento com
-MEMS escolhem sensores de dezenas de quilohertz~\cite{landi2023,jakobsen2024}, porque a
-assinatura viaja modulada em portadora de alta frequência~\cite{randall2011,antoni2007}.
-Os resultados desta seção são consistentes com essa objeção e a delimitam: a banda impede o
-diagnóstico de rolamento e não impede a detecção de desbalanceamento.
+A baixa detecção de desalinhamento pode vir da escolha dos descritores. Sua assinatura é a razão entre
+as linhas de duas vezes e uma vez a rotação, que valor eficaz, curtose, fator de crista e frequência
+dominante não medem. A evidência é fraca, porque os valores têm dispersão da ordem do próprio valor. A
+seção~\ref{sec:conc-futuro} indica o experimento que testaria essa explicação.

@@ -1,39 +1,35 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Abstract --- tradução do resumo, mesma afirmação e mesma força.
+%% Abstract --- tradução do resumo.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{resumo}[Abstract]
 \begin{otherlanguage*}{english}
-Vibration-based predictive maintenance of rotating machinery is a standardised practice,
-and the obstacle to its adoption is the cost of instrumentation, which restricts coverage
-to critical assets. Low-cost sensor nodes address this obstacle, but the literature
-proposing them rarely declares the measurement bandwidth and noise floor that underpin the
-reported performance. This work determines what the measurement chain specified for a
-device of this class --- a consumer-grade accelerometer sampling at 1~kHz, a low-power
-microcontroller, a long-range radio link and a polymer printed enclosure --- is able to
-measure, and calibrates the decision stage so that performance is verifiable at the
-intended operating point. The method builds reference conditions whose correct result
-follows from an analytical solution or from a normative definition, submits them to the
-proposed chain and measures the deviation. Results have three provenances, declared
-individually: synthesised signal, real test-rig data decimated in software, and modelling
-over design specifications. On real data, at a measured 2\% false alarm rate, detection reaches
-75.0\% $\pm$ 3.5\% for imbalance, between 14.8\% and 20.7\% for pure bearing faults and
-between 5.0\% and 7.2\% for misalignment. On synthesised signals, three of the estimation
-decisions examined alter the results by larger margins than the physical effect under
-investigation: time-domain integration misses the normative indicator by 73\% without bias
-and by 716\% under a bias within the sensor specification, whereas frequency-domain
-integration recovers it exactly; the detector's default thresholding policy flags 42.1\% of
-normal operation as anomalous, against 1.4\% under a calibrated threshold; and random
-window partitioning inflates accuracy by roughly 36 percentage points relative to
-partitioning by test run. From modelling, the assembly mounting frequency falls at 557~Hz,
-inside the measurement band, and the enclosure keeps the electronics below every limit
-during operation; the binding thermal limit is the battery's charging limit, and only while
-charging. We conclude that the chain supports imbalance detection under
-a fixed false alarm rate and does not support bearing fault diagnosis, and that the
-verifiable contribution of a device of this class lies in the decision stage, provided the
-acquisition stage is declared. The conclusions hold for the specified chain, not for the
-performance of the assembled device in industrial operation: building the prototype and
-testing it in a real environment constitute the next stage.
+%% Ponto decimal só neste ambiente; o resto do documento usa vírgula.
+\sisetup{output-decimal-marker = {.}}
+Vibration analysis lets maintenance decisions follow the measured condition of a motor, but the
+cost of instrumentation limits its use to critical machines and leaves most motors in a plant
+unmonitored. Low-cost sensor nodes could extend this coverage, yet the studies proposing them rarely
+report the bandwidth and noise floor of the sensor. This work investigated which motor failure modes
+a low-cost measurement chain, made up of a MEMS accelerometer sampled at \SI{1}{\kilo\hertz}, an ESP32
+microcontroller and a LoRa link, can detect, and how much estimation decisions change the reported
+performance. The aim was to measure detection by failure mode and to calibrate the threshold of an
+Isolation Forest detector for a fixed false alarm rate. The experiments used \num{1951} test-rig
+recordings from the public MAFAULDA dataset, decimated to \SI{1}{\kilo\hertz}, and synthesised signals,
+with integration tested against an analytical value. On real data, at a \SI{2.0 \pm 1.3}{\percent}
+false alarm rate, detection was \SI{75.0 \pm 3.5}{\percent} for imbalance, \SI{14.8}{\percent} and
+\SI{20.7}{\percent} for bearing faults with no added mass and \SI{5.0}{\percent} and \SI{7.2}{\percent}
+for misalignment; with the default threshold, the false alarm rate was \SI{31.2 \pm 4.2}{\percent}. On
+synthesised signals, a cumulative sum without mean removal missed the RMS velocity by \SI{73}{\percent},
+and by \SI{716}{\percent} with a bias within the sensor specification, whereas frequency-domain
+integration came within \SI{0.01}{\percent} of the analytical value; the partial area under the ROC curve
+fell by up to \SI{20.3}{\percent} between the \SI{20}{\kilo\hertz} and \SI{1}{\kilo\hertz} chains, against
+\SI{3.7}{\percent} for the global area; and a supervised classifier reached \SI{99.0}{\percent} accuracy
+with random window partitioning and \SI{63.2}{\percent} with partitioning by test run. \emandamento{In two
+bench setups, with no motor and no induced fault, the device sampled at about \SI{999.8}{\hertz} over three
+cycles and the receiver accepted \num{270} packets.} The results indicate that, with this detector and four
+features, the chain can detect imbalance at a fixed false alarm rate and detects few bearing faults when no
+imbalance is added. They also indicate that the performance of devices of this class can only be compared
+when the bandwidth, threshold and validation protocol are reported.
 
 \vspace{\onelineskip}
 \noindent
