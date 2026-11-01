@@ -9,7 +9,7 @@ vibração e temperatura, roda um modelo de detecção de anomalias embarcado
 
 A inversão de papéis começa pelo **ESP32-C3 Super Mini como transmissor**,
 com MPU e RA-02. Use `esp32-c3-device`, conforme
-[ligações e operação](docs/c3-device.md). O S3 será migrado para gateway
+[ligações e operação](docs/engenharia/c3-device.md). O S3 será migrado para gateway
 em uma etapa posterior. O NTC e o circuito de alimentação final ainda não
 estão montados. As instruções de S3 abaixo descrevem a montagem anterior.
 
@@ -538,46 +538,62 @@ Reportar detecção de rolamento sem estratificar pela massa infla o resultado.
 
 ```
 kaelix-firmware/
-├── platformio.ini      # ambientes esp32-s3 (firmware real) e native (testes)
-├── pyproject.toml      # ambiente Python das análises, figuras e notebooks
+├── platformio.ini      # ambientes de firmware (S3, C3, receptor, diagnóstico) e native (testes)
+├── pyproject.toml      # ambiente Python único: treino, figuras, notebooks e testes
 │
 ├── src/                # camada que fala com o hardware
-│   ├── main.cpp          # ciclo principal
+│   ├── main.cpp          # ciclo principal do transmissor
+│   ├── device_pins.h     # pinagem do transmissor, por placa
 │   ├── sensors/          # vibração (I2C/FIFO) e temperatura (ADC)
 │   ├── ml/               # integração do modelo de detecção de anomalias
 │   ├── comms/            # empacotamento e envio LoRa
-│   └── power/            # deep sleep e corte de energia
-├── lib/                # lógica pura, sem Arduino — testável em `native`
+│   ├── power/            # deep sleep, corte de energia e watchdog
+│   ├── receiver/         # receptor LoRa e envio por Wi-Fi (firmware à parte)
+│   └── diagnostics/      # sonda isolada do RA-02 (firmware à parte)
+├── lib/                # lógica pura, sem Arduino, testável em `native`
 │   ├── signal_processing/  # RMS, curtose, fator de crista, FFT
 │   ├── thermistor/         # conversão mV → resistência → °C
 │   ├── isolation_forest/   # inferência do modelo de anomalia
-│   └── crc16/              # integridade do pacote LoRa
+│   ├── crc16/              # integridade do pacote LoRa
+│   └── kaelix_status/      # códigos de status compartilhados
+├── include/            # configuração do gateway (o arquivo local fica fora do git)
 ├── test/               # testes unitários do firmware (PlatformIO + Unity)
 ├── wokwi/              # simulação (ESP32-S3 + MPU6050)
+├── logs/               # registros seriais dos ensaios de bancada
 │
 ├── training/           # pipeline Python de treino do modelo
 │   ├── kaelix_ml/        # ingestão, features, rotulagem, treino, export C++
 │   └── tests/            # testes do pipeline (pytest)
 ├── tools/              # verificação reproduzível e análise estática
-├── data/               # datasets — brutos ignorados, cache derivado versionado
+├── data/               # datasets: brutos ignorados, cache derivado versionado
 │
 ├── docs/
-│   ├── referencias.md    # revisão de literatura
-│   ├── relatorio/        # monografia (LaTeX + PDF)
-│   ├── device/           # desenho técnico do invólucro
+│   ├── TCC/              # monografia (LaTeX; `make` gera build/main.pdf)
+│   ├── relatorios/       # relatórios técnicos de origem (LaTeX)
+│   ├── engenharia/       # arquitetura, falhas, norma de codificação, rastreabilidade, referências
+│   ├── guias/            # guias de escrita
+│   ├── contracts/        # contratos JSON da API do gateway
 │   └── img/
-├── experiments/        # notebooks de validação numérica (fonte da verdade)
-└── experiments/figures/  # figuras em padrão de submissão
-    ├── scripts/          # exportadores Python + plot em R (ggplot2)
-    ├── data/             # CSVs rastreáveis
-    └── output/           # SVG/PDF vetoriais, TIFF 600 dpi
+├── experiments/
+│   ├── figures/          # figuras em padrão de submissão
+│   │   ├── scripts/        # exportadores Python + plot em R (ggplot2)
+│   │   ├── data/           # CSVs rastreáveis
+│   │   └── output/         # SVG/PDF vetoriais, TIFF 600 dpi
+│   ├── notebooks/        # validação numérica (fonte da verdade)
+│   ├── gateway/          # simulador do gateway e seus testes
+│   └── verificacao-lean/ # verificação formal em Lean 4
+└── hardware/           # placas, invólucro e análises (trabalho futuro no TCC)
+    ├── pcb/              # versões v1 a v3
+    ├── involucro/        # versões v1 a v3
+    ├── fem/              # elementos finitos (malhas fora do git)
+    └── 3dmodels/
 ```
 
-`docs/relatorio/` contém quatro documentos: o relatório de simulação da cadeia de
-medição, a revisão de literatura, a análise de comunicação e topologia, e a tabela
-de práticas de tolerância a falhas em sistemas embarcados críticos
-(`praticas-sistemas-criticos.tex` — redundância aviônica, normas de garantia e o que
-o Kaelix adota, não adota e por quê).
+`docs/relatorios/` contém cinco documentos: o relatório de simulação da cadeia de
+medição, a revisão de literatura, a análise de comunicação e topologia, a verificação
+do hardware e a tabela de práticas de tolerância a falhas em sistemas embarcados
+críticos (`praticas-sistemas-criticos.tex`: redundância aviônica, normas de garantia e
+o que o Kaelix adota, não adota e por quê).
 
 Histórico de mudanças em [CHANGELOG.md](CHANGELOG.md).
 
@@ -601,11 +617,13 @@ mas o gerador Python que consome a mesma struct só quebra na suíte de treino.
 
 | Suíte | Casos | Cobre |
 |---|---|---|
-| `tools/run-native-tests.sh` | 146 | `lib/`, nos dois modos de build |
+| `tools/run-native-tests.sh` | 176 (85 em dev, 91 em prod) | `lib/` e a lógica de `src/` que compila no host |
 | `training/tests/` | 35 | pipeline de treino, paridade C++↔Python |
 | `experiments/gateway/tests/` | 19 | pacote, receptor, cadeia simulada |
 
-Nenhuma cobre a camada `src/`, que depende de `pio run -e esp32-s3`.
+`test_vibration`, `test_packet_decode`, `test_gateway_delivery` e `test_remote_logs`
+incluem arquivos de `src/`. O restante da camada, que fala com o hardware, depende de
+`pio run` e do ensaio em bancada.
 
 ## Pipeline de treino
 
@@ -638,7 +656,7 @@ pouco além do boot.
 
 # Pendências conhecidas
 
-- **Gateway uma versão atrás do firmware.** `experiments/gateway/packet.py` fixa
+- **Gateway uma versão atrás do firmware.** `experiments/gateway/kaelix_gateway/packet.py` fixa
   `PACKET_VERSION = 1` e 20 bytes; o firmware emite v2 com 21 bytes. O gateway
   recusaria todo pacote real. Os 19 testes passam porque exercitam o gateway
   contra o próprio codificador — nenhum teste cruza a fronteira firmware↔gateway.

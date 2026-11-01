@@ -6,7 +6,7 @@
 #include "kaelix_status.h"
 
 // PENDÊNCIA de arquitetura: incluir `../sensors/vibration.h` a partir de
-// `ml` é o caso da regra 2/3 de docs/ARQUITETURA-SOFTWARE.md §1 — dois
+// `ml` é o caso da regra 2/3 de docs/engenharia/ARQUITETURA-SOFTWARE.md §1 — dois
 // módulos de L2 compartilhando um tipo. O destino de `VibrationFeatures`
 // é L1, ao lado de lib/signal_processing, que é quem produz os quatro
 // números. Não foi movido nesta rodada porque lib/ está sob posse de

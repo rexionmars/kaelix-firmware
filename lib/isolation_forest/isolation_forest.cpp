@@ -15,7 +15,7 @@ namespace kaelix::ml {
 //
 // Árvore inconsistente é outra coisa: é DADO. Vem de um header gerado
 // mal formado ou de um bit invertido na flash em campo, e o §5 de
-// docs/ARQUITETURA-SOFTWARE.md classifica ModelMalformed e
+// docs/engenharia/ARQUITETURA-SOFTWARE.md classifica ModelMalformed e
 // ModelDepthExceeded como falhas em que "o ciclo continua" — estado da
 // máquina = Desconhecido, diagnóstico no pacote. Uma macro que aborta
 // não consegue implementar um status cuja política é seguir degradado, e

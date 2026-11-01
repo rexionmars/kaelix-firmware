@@ -1,6 +1,6 @@
 """Modela o invólucro a partir das cotas do desenho, em três peças.
 
-Fonte: docs/device/IMG_5298.jpeg, versão 4 (Lauan Alves, TCC Eng. de Software,
+Fonte: docs/img/IMG_5298.jpeg, versão 4 (Lauan Alves, TCC Eng. de Software,
 ICEV). Cada cota abaixo traz a vista de onde saiu. Onde o desenho não cota,
 está dito de onde veio o número — e onde ele não fecha, está dito também.
 

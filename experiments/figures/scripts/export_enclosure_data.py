@@ -16,7 +16,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 MU0 = 4e-7 * np.pi
 
 # ---------------------------------------------------------------------------
-# Cotas do desenho (docs/device/, versão 4) — mm
+# Cotas do desenho (docs/img/IMG_5298.jpeg, versão 4) — mm
 # ---------------------------------------------------------------------------
 CORPO_EXT = 50.0
 PAREDE, FUNDO = 3.5, 8.0

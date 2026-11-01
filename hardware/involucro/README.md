@@ -14,7 +14,7 @@ o plugue. Tudo o mais na tabela abaixo vale para a v3 como para a v2.
 | | v1 | v2 |
 |---|---|---|
 | estado | congelada | ativa (v3 = v2 com o furo do USB-C medido) |
-| origem das cotas | `docs/device/IMG_5298.jpeg`, versão 4 | dimensionada pela célula real e pela placa |
+| origem das cotas | `docs/img/IMG_5298.jpeg`, versão 4 | dimensionada pela célula real e pela placa |
 | planta | quadrada | retangular |
 | cavidade | 43 × 43 × 54 | 62 × 52 × 30 |
 | corpo | 50 × 50 × 62 | 69 × 59 × 38 |

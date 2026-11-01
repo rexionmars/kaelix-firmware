@@ -26,7 +26,7 @@
 // `comms` o coloca no ar. Antes, src/comms/lora.h incluía ../ml/model.h
 // só para alcançar o enum, e o formato de fio passava a depender do
 // módulo de inferência (violação das regras 2 e 3 de
-// docs/ARQUITETURA-SOFTWARE.md §1).
+// docs/engenharia/ARQUITETURA-SOFTWARE.md §1).
 //
 // PENDÊNCIA: o destino final deste tipo é L0 (lib/kaelix_status/), ao
 // lado de `Status`, para que também o gateway possa compartilhá-lo. Ele

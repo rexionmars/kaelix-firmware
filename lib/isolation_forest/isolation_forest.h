@@ -20,7 +20,7 @@
 namespace kaelix::ml {
 
 // Cota superior de profundidade da travessia — a constante que o §4 de
-// docs/ARQUITETURA-SOFTWARE.md chama de KAELIX_MAX_TREE_DEPTH.
+// docs/engenharia/ARQUITETURA-SOFTWARE.md chama de KAELIX_MAX_TREE_DEPTH.
 //
 // Derivação: o sklearn limita cada árvore de isolamento a
 // ceil(log2(max_samples)) níveis. Com SUBSAMPLE_SIZE = 256 são 8; mesmo

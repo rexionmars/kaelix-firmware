@@ -1,6 +1,6 @@
 # Mapa de integração — dos cinco relatórios para o TCC
 
-Resultado do esboço reverso dos cinco documentos de `kaelix-firmware/docs/relatorio/`.
+Resultado do esboço reverso dos cinco documentos de `kaelix-firmware/docs/relatorios/`.
 Método: extrair a primeira frase de cada seção e subseção dos cinco `.tex`, ler a sequência
 resultante e confrontá-la com a tese fixada no Capítulo 1.
 

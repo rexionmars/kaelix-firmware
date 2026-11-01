@@ -12,7 +12,7 @@
 // ---------------------------------------------------------------------
 // Por que estas funções continuam devolvendo `float`
 // ---------------------------------------------------------------------
-// A regra de L1 em docs/ARQUITETURA-SOFTWARE.md §5 é explícita: a
+// A regra de L1 em docs/engenharia/ARQUITETURA-SOFTWARE.md §5 é explícita: a
 // matemática pura mantém o retorno `float` e valida com KAELIX_REQUIRE*.
 // Trocar o retorno por `Status` mudaria todos os pontos de chamada e o
 // formato dos testes de paridade sem ganhar nada — o diagnóstico cabe num

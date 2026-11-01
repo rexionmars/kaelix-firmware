@@ -43,6 +43,6 @@ else
 fi
 
 printf '\nNão coberto por esta verificação:\n'
-printf '  - a camada src/ do firmware (sem toolchain ESP32 aqui; use pio run -e esp32-s3)\n'
+printf '  - a parte de src/ que fala com o hardware (use pio run -e <ambiente>)\n'
 printf '  - qualquer comportamento em hardware real\n'
 exit "$falhas"

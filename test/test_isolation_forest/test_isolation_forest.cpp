@@ -17,7 +17,7 @@ using namespace kaelix::ml;
 // %.9g, que faz round-trip exato em float: se qualquer verificação
 // acrescentada mudar um bit do resultado, estes casos falham. É a
 // tradução, para o lado C++, do invariante de paridade numérica
-// (docs/ARQUITETURA-SOFTWARE.md §7) — o score é validado contra
+// (docs/engenharia/ARQUITETURA-SOFTWARE.md §7) — o score é validado contra
 // sklearn.score_samples a 1e-4 em training/tests/test_export_cpp.py, e
 // nada aqui pode deslocá-lo.
 #define ASSERT_FLOAT_BIT_EXACT(expected, actual) TEST_ASSERT_FLOAT_WITHIN(0.0f, expected, actual)
@@ -475,7 +475,7 @@ void test_validate_rejects_max_depth_beyond_project_limit(void) {
 // =====================================================================
 //
 // No build de desenvolvimento KAELIX_REQUIRE aborta de propósito
-// (docs/ARQUITETURA-SOFTWARE.md §5), então estes casos só podem ser
+// (docs/engenharia/ARQUITETURA-SOFTWARE.md §5), então estes casos só podem ser
 // exercitados com a semântica de produção: compile com
 // -D KAELIX_PRODUCTION ou -D KAELIX_ASSERT_ABORT=0. Fora dela, os casos
 // não são registrados — não são silenciados, simplesmente não existem

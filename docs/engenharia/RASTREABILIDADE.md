@@ -19,10 +19,10 @@ Nenhum documento do projeto declarava requisitos numerados de forma completa. Os
    nascer verificável.
 2. **As decisões registradas** em `README.md` (orçamento de energia, formato do
    pacote, banda de análise, escolha do Isolation Forest nativo).
-3. **`docs/ARQUITETURA-SOFTWARE.md`** — regra de dependência entre camadas,
+3. **`docs/engenharia/ARQUITETURA-SOFTWARE.md`** — regra de dependência entre camadas,
    política de memória, política de erro, estado seguro, paridade numérica, e a
    semente de matriz do §9, que este documento substitui e amplia.
-4. **`docs/ANALISE-DE-FALHAS.md`** — os `REQ-SEG-01..62` de mitigação de FMEA e
+4. **`docs/engenharia/ANALISE-DE-FALHAS.md`** — os `REQ-SEG-01..62` de mitigação de FMEA e
    os invariantes `INV-1..5`. Eles não são renumerados aqui: aparecem na coluna
    de origem, para que a FMEA e esta matriz continuem sendo o mesmo grafo.
 
@@ -418,7 +418,7 @@ pio run -e esp32-s3                                      # REQ-SYS-06
   teste que roda em comando versionado.
 - Um requisito só sai de `X` quando a verificação que reprovava passa a passar —
   nunca por ajuste do enunciado.
-- Esta tabela **substitui** a semente do §9 de `docs/ARQUITETURA-SOFTWARE.md` e
-  o esqueleto do §9 de `docs/ANALISE-DE-FALHAS.md`, que passam a apontar para
+- Esta tabela **substitui** a semente do §9 de `docs/engenharia/ARQUITETURA-SOFTWARE.md` e
+  o esqueleto do §9 de `docs/engenharia/ANALISE-DE-FALHAS.md`, que passam a apontar para
   cá. Os `REQ-SEG-nn` da FMEA continuam válidos como requisitos de mitigação e
   aparecem na linha "Origem" de cada área.

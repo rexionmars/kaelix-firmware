@@ -130,7 +130,7 @@ pads, a linha "PCB Edge" do footprint tem de cair na borda (desvio medido
 
 | # | Defeito | Medição | Correção |
 |---|---|---|---|
-| 1 | Corte de energia dos periféricos por BC337 low-side. Os pull-ups de 4k7 permaneciam em +3V3 e alimentavam o MPU6050 pelos diodos de ESD de SDA/SCL | FM-27 em `docs/ANALISE-DE-FALHAS.md` | load switch high-side (Q1 SI2301 + Q2 BC847B); pull-ups movidos para o rail comutado +3V3_SW |
+| 1 | Corte de energia dos periféricos por BC337 low-side. Os pull-ups de 4k7 permaneciam em +3V3 e alimentavam o MPU6050 pelos diodos de ESD de SDA/SCL | FM-27 em `docs/engenharia/ANALISE-DE-FALHAS.md` | load switch high-side (Q1 SI2301 + Q2 BC847B); pull-ups movidos para o rail comutado +3V3_SW |
 | 2 | MPU6050 permanentemente alimentado: 3,9 mA contínuos | orçamento em `src/power/sleep.cpp` | passou ao rail comutado; 314 µA efetivos |
 | 3 | Placa em Ø74 mm num vão de 43. `verifica_encaixe` passava porque comparava escalares | contorno contra o vão do desenho | módulos empilhados um por face; contorno retangular |
 | 4 | Ângulo de pad gravado como relativo. É **absoluto** (biblioteca + rotação do footprint) | 42 curtos no DRC | conferido contra as placas de exemplo do KiCad |
@@ -141,7 +141,7 @@ pads, a linha "PCB Edge" do footprint tem de cair na borda (desvio medido
 | 9 | Nenhuma pista roteada — só footprints, planos e contorno | 70 pads desconectados no DRC | roteador de labirinto de duas camadas |
 | 10 | Sem medição de tensão da bateria | REQ-SEG-29, REQ-SEG-53 e o heartbeat da QUARENTENA dependem dela | divisor 1M/1M + C11 em IO6 |
 | 11 | Sem proteção de polaridade invertida na entrada | — | Q3 SI2301 em série, dreno na bateria |
-| 12 | Sem filtro no nó do ADC do NTC. FM-08 raciocina sobre "capacitância de filtro × 10 k" — capacitor que não existia | `docs/ANALISE-DE-FALHAS.md` | C12 100n |
+| 12 | Sem filtro no nó do ADC do NTC. FM-08 raciocina sobre "capacitância de filtro × 10 k" — capacitor que não existia | `docs/engenharia/ANALISE-DE-FALHAS.md` | C12 100n |
 | 13 | Corredor de cabo do conector de bateria não modelado; furo M2 a 2,6 mm da boca | courtyard cobre a peça, não o que se conecta nela | corredor virou restrição de placement |
 | 14 | Varredura do corredor registrada em comentário estava obsoleta: atribuía o limite ao triedro de furos e a peças sem lugar | remedido: placement fecha de 2,0 a 9,0 mm, furos a 97° em toda a faixa | o limite real é o plano de terra; comentário reescrito com o número medido |
 | 15 | `gen_involucro.py` conferia as duas cavidades contra uma única versão de placa, escolhida por variável de ambiente | v1 do invólucro acusava 1616 mm³ de interferência com a placa da v2 | a placa passou a acompanhar a versão do invólucro |

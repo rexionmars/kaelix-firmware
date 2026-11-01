@@ -4,7 +4,7 @@ A netlist é importada de `gen_schematic.py` — uma fonte da verdade só. Se um
 pino mudar lá, muda aqui.
 
 Contorno: QUADRADO de 42 x 42 mm com os quatro cantos recortados. Ele vem do
-desenho do invólucro (docs/device/IMG_5298.jpeg, versão 4), que diz:
+desenho do invólucro (docs/img/IMG_5298.jpeg, versão 4), que diz:
 
     corpo 50,0 x 50,0 externo    vão interno 43,0, canto R7
     4 bosses M3 Ø11 a 36,0 entre eixos
@@ -70,7 +70,7 @@ CX, CY = 150.0, 100.0
 # O disco de Ø40 vinha da versão anterior deste arquivo, que justificava assim:
 # "com 43 mm de vão, um disco de 40 mm deixa 1,5 mm de folga radial". A conta
 # está certa e a premissa está errada — ela trata um vão QUADRADO como se
-# fosse circular. O desenho do invólucro (docs/device/IMG_5298.jpeg, versão 4)
+# fosse circular. O desenho do invólucro (docs/img/IMG_5298.jpeg, versão 4)
 # diz, em três vistas: corpo 50,0 x 50,0 externo, VÃO INTERNO 43,0 com canto
 # R7, e quatro bosses M3 de Ø11 a 36,0 entre eixos.
 #

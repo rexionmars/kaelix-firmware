@@ -1,5 +1,4 @@
-# Intermediários de compilação do LaTeX. O principal.pdf é versionado,
-# como os demais PDFs de docs/relatorio/.
+# Intermediários de compilação do LaTeX. O PDF sai em build/, também fora do git.
 *.aux
 *.bbl
 *.blg
