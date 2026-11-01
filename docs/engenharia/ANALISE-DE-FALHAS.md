@@ -426,7 +426,7 @@ rastreabilidade da seção 9.
 #### FM-26 — Corte de energia não atua: periféricos alimentados durante o sono
 
 - **Local:** `src/power/sleep.cpp:57-70`. O código já trata corretamente o caso mais sutil (`gpio_hold_dis` no boot, `gpio_hold_en` + `gpio_deep_sleep_hold_en` antes de dormir, com o raciocínio escrito nos comentários — é um dos pontos fortes do código atual).
-- **Causa residual:** o `hold` falhando silenciosamente porque o retorno de `gpio_hold_en()` não é verificado; Q1 (SI2301) com Vgs(th) fora da faixa de nível lógico não fechando o canal em 3,3 V. O pino e a polaridade deixaram de ser `TODO`: GPIO5 ativo-alto, conferido contra `hardware/gen_schematic.py`.
+- **Causa residual:** o `hold` falhando silenciosamente porque o retorno de `gpio_hold_en()` não é verificado; Q1 (SI2301) com Vgs(th) fora da faixa de nível lógico não fechando o canal em 3,3 V. O pino e a polaridade deixaram de ser `TODO`: GPIO5 ativo-alto, conferido contra `hardware/scripts/gen_schematic.py`.
 - **Efeito local:** o MPU6050 (~3,9 mA) e o divisor do NTC (~0,33 mA em 3,3 V sobre 10 k) permanecem energizados durante 720 s.
 - **Efeito no sistema:** ~2,5 A·s adicionais por ciclo; o consumo médio salta de 309 µA para vários mA e a autonomia cai de 269 dias para poucos dias. Nada indica a falha, porque a leitura funciona normalmente. S2.
 - **Como é detectado hoje:** não é. Sem medição de tensão da bateria, a única evidência é o dispositivo morrer antes da hora.
@@ -444,7 +444,7 @@ estava proposta (REQ-SEG-54) resolvia o sintoma, não a causa.
 - **Causa (topologia antiga):** o BC337 era chave low-side — cortava o retorno a GND, mas SDA/SCL continuavam presos a +3V3 pelos resistores de pull-up. A corrente entrava pelos diodos de proteção dos pinos do MPU6050 e o alimentava parasitariamente.
 - **Efeito local:** o sensor podia permanecer parcialmente energizado, com corrente de fuga pelos pull-ups (2 × 3,3 V / 4,7 kΩ ≈ 1,4 mA no pior caso, se os pinos do sensor puxassem para baixo).
 - **Efeito no sistema:** mesmo efeito de FM-26 em escala menor, e o corte de energia deixava de ser garantia de reset do sensor (o que enfraquecia a mitigação REQ-SEG-08). S2 no pior caso.
-- **Correção aplicada:** o corte passou a ser high-side (Q1 SI2301 comandado por Q2 BC847B), e os pull-ups R2/R3 foram movidos do rail fixo +3V3 para o rail comutado +3V3_SW. Com o rail em zero não existe fonte para o caminho parasita: os pull-ups estão do lado cortado. Ver `hardware/gen_schematic.py`, bloco "Corte de energia dos periféricos".
+- **Correção aplicada:** o corte passou a ser high-side (Q1 SI2301 comandado por Q2 BC847B), e os pull-ups R2/R3 foram movidos do rail fixo +3V3 para o rail comutado +3V3_SW. Com o rail em zero não existe fonte para o caminho parasita: os pull-ups estão do lado cortado. Ver `hardware/scripts/gen_schematic.py`, bloco "Corte de energia dos periféricos".
 - **O que resta verificar:** REQ-SEG-55 continua valendo — medir a corrente em sono com o sensor populado. A topologia elimina o caminho conhecido; o ensaio é o que responde se existe outro.
 - **REQ-SEG-54 fica sem objeto:** colocar SDA/SCL em nível baixo antes do sono era contornar o efeito. Com os pull-ups no rail cortado, não há o que contornar.
 

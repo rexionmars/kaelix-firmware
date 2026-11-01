@@ -7,7 +7,7 @@
 # quando chega a peça errada. Aqui todos saem da mesma fonte, sempre, e o
 # script falha se ERC ou DRC acusarem qualquer coisa.
 #
-# A fonte da verdade é hardware/gen_schematic.py. Nada abaixo dele é editado
+# A fonte da verdade é hardware/scripts/gen_schematic.py. Nada abaixo dele é editado
 # à mão: .kicad_sch, .kicad_pcb, .kicad_pro, .net, o BOM e os renders são
 # saída.
 set -uo pipefail
@@ -31,8 +31,8 @@ printf 'versão da placa: %s  (KAELIX_PCB para trocar)\n' "$VERSAO"
 mkdir -p "$PROJ"
 
 secao "geração"
-python3 "$HW/gen_schematic.py" || falhou "gen_schematic.py falhou"
-python3 "$HW/gen_pcb.py"       || falhou "gen_pcb.py falhou"
+uv run --project "$RAIZ" python "$HW/scripts/gen_schematic.py" || falhou "gen_schematic.py falhou"
+uv run --project "$RAIZ" python "$HW/scripts/gen_pcb.py"       || falhou "gen_pcb.py falhou"
 
 secao "corpos 3D"
 # Os modelos gerados vêm antes do PCB porque o .step exportado depende deles.
@@ -41,7 +41,7 @@ if [ -x "$FC" ]; then
   # Código de saída, e NÃO grep de padrão: duas vezes esta etapa foi dada
   # como falha só porque o formato da saída mudou e o padrão deixou de casar.
   # Filtro serve para esconder o banner do FreeCAD, não para decidir sucesso.
-  saida=$("$FC" "$HW/gen_3dmodels.py" 2>/dev/null); rc=$?
+  saida=$("$FC" "$HW/scripts/gen_3dmodels.py" 2>/dev/null); rc=$?
   printf '%s\n' "$saida" | grep -vE "^FreeCAD |^\(C\) |free and open-source|^$"
   [ "$rc" -eq 0 ] || falhou "gen_3dmodels.py: modelo ausente ou fora das cotas"
 else
@@ -126,7 +126,7 @@ secao "arquivos derivados"
 
 secao "modelo mecânico"
 if [ -x "$FC" ]; then
-  saida=$("$FC" "$HW/check_3d.py" 2>/dev/null); rc=$?
+  saida=$("$FC" "$HW/scripts/check_3d.py" 2>/dev/null); rc=$?
   printf '%s\n' "$saida" | grep -vE "^FreeCAD |^\(C\) |free and open-source|^$"
   [ "$rc" -eq 0 ] || falhou "check_3d.py: modelo incompleto, interferência ou fora do vão"
 else

@@ -17,7 +17,7 @@ Três verificações, todas de Steinberg:
   3. Regra da oitava: placa e chassi têm de estar separados por um fator 2,
      senão respondem acoplados e a amplificação se multiplica.
 
-    uv run --no-project --with numpy python hardware/vibracao.py
+    uv run --no-project --with numpy python hardware/scripts/vibracao.py
 """
 import math
 import os
@@ -27,8 +27,9 @@ import sys
 import numpy as np
 
 AQUI = pathlib.Path(__file__).resolve().parent
+HW = AQUI.parent
 sys.path.insert(0, str(AQUI))
-sys.path.insert(0, str(AQUI.parent / "training"))
+sys.path.insert(0, str(HW.parent / "training"))
 from kaelix_ml.labeling import (ISO_10816_3_ZONE_BOUNDARIES_MM_S,  # noqa: E402
                                 ISO_BAND_HZ, GRAVITY_MS2)
 
@@ -159,11 +160,11 @@ def geometria(versao):
 
 
 def modo_da_placa(versao):
-    base = AQUI / "fem" / versao / "modal_furos_povoada"
+    base = HW / "fem" / versao / "modal_furos_povoada"
     frd, dat = base.with_suffix(".frd"), base.with_suffix(".dat")
     if not frd.exists():
         raise SystemExit(f"falta {frd} — rode KAELIX_PCB={versao} "
-                         f"uv run --with gmsh python hardware/fem_modal.py")
+                         f"uv run --with gmsh python hardware/scripts/fem_modal.py")
     nos, _el, modos = _FIG.le_frd(frd)
     fn = _FIG.frequencias(dat)[0]
     uz = {n: abs(u[2]) for n, u in modos[0].items()}
@@ -183,7 +184,7 @@ def forma_local(nos, uzn, x, y, raio=3.0):
     return max(v) if v else 0.0
 
 
-# frequência do caminho de montagem, de hardware/fem_montagem.py
+# frequência do caminho de montagem, de hardware/scripts/fem_montagem.py
 F_CHASSI = {"v1": {"carga no topo": 936.0, "carga no piso": 1181.0},
             "v2": {"carga no topo": 679.0, "carga no piso": 1670.0}}
 
@@ -313,7 +314,7 @@ sys.stdout.flush()
 # ---------------------------------------------------------------------
 import csv                                                  # noqa: E402
 
-DADOS = AQUI.parent / "experiments" / "figures" / "data"
+DADOS = HW.parent / "experiments" / "figures" / "data"
 DADOS.mkdir(parents=True, exist_ok=True)
 FN = {l["versao"]: l["fn"] for l in LINHAS}
 

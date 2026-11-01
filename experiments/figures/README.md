@@ -29,10 +29,10 @@ figures/output/*.{svg,pdf,tiff,png}    SVG/PDF vetoriais, TIFF 600 dpi
 | cálculo no próprio exportador | `export_topologia_data.py` | 5 |
 | **módulo `experiments/gateway/`** | `export_gateway_data.py` | 7 |
 | esquema, sem dado numérico | — | 6 |
-| **netlist v3** (`hardware/gen_schematic.py`) | KiCad CLI | 8 |
+| **netlist v3** (`hardware/scripts/gen_schematic.py`) | KiCad CLI | 8 |
 
 **Figura 8 é a exceção do pipeline.** A prancha elétrica usa os símbolos da
-biblioteca do KiCad e a netlist v3 de `hardware/gen_schematic.py`, incluindo
+biblioteca do KiCad e a netlist v3 de `hardware/scripts/gen_schematic.py`, incluindo
 USB-C e BQ21040. O KiCad CLI exporta as três folhas; o adaptador recupera o
 texto editável do SVG e compõe margens e carimbo segundo o guia de plotagem.
 Não usa matplotlib. A composição em preto dispensa codificação por cor.

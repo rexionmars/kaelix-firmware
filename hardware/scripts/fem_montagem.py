@@ -9,7 +9,7 @@ e ha duas versoes de involucro para comparar, o que antes nao existia.
 A pergunta: a v2, 24 mm mais baixa, tira a frequencia da banda sozinha, ou a
 base metalica continua necessaria?
 
-    uv run --no-project --with gmsh python hardware/fem_montagem.py
+    uv run --no-project --with gmsh python hardware/scripts/fem_montagem.py
 """
 import math
 import os
@@ -18,6 +18,7 @@ import subprocess
 import sys
 
 AQUI = pathlib.Path(__file__).resolve().parent
+HW = AQUI.parent
 CCX = pathlib.Path("/Applications/FreeCAD.app/Contents/Resources/bin/ccx")
 
 # ASA impresso. E de 2,0 GPa e o valor de folha para ASA macico; peca impressa
@@ -180,10 +181,10 @@ print("o modo relatado e o de MAIOR massa modal efetiva lateral (X+Y): e o que")
 print("move o sensor. O primeiro autovalor costuma ser modo local de parede.\n")
 
 for v, cfg in CARGA.items():
-    saida = AQUI / "fem" / v
+    saida = HW / "fem" / v
     step = saida / "caminho.step"
     if not step.exists():
-        raise SystemExit(f"falta {step} — rode hardware/fem_caminho.py no freecadcmd")
+        raise SystemExit(f"falta {step} — rode hardware/scripts/fem_caminho.py no freecadcmd")
     inp = saida / "caminho.inp"
     nn, ne = malha(step, inp)
     nos = le_nos(inp)

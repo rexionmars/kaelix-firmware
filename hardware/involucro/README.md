@@ -1,6 +1,6 @@
 # Invólucro — v1, v2 e v3
 
-Três versões geradas por `hardware/gen_involucro.py` a partir de um único
+Três versões geradas por `hardware/scripts/gen_involucro.py` a partir de um único
 conjunto de parâmetros (`VERSOES`). Todas reprodutíveis; nenhum arquivo desta
 pasta é editado à mão.
 
@@ -122,7 +122,7 @@ Cada execução mede e reporta, por versão:
 ## Regenerar
 
 ```
-/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd hardware/gen_involucro.py
+/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd hardware/scripts/gen_involucro.py
 ```
 
 Depende de `hardware/pcb/<versão>/kaelix.step` (gerado por `tools/build-hardware.sh`) e dos

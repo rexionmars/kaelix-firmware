@@ -5,6 +5,29 @@ Registro das mudanças do projeto Kaelix. Formato baseado em
 
 ## [Não publicado]
 
+## Reorganização de pastas
+
+Os arquivos mudaram de lugar, sem alteração de comportamento. As entradas abaixo
+não foram reescritas e continuam citando os caminhos da época.
+
+| Antes | Agora |
+|---|---|
+| `docs/local_report/tex/` | `docs/relatorios/` |
+| `docs/local_report/md/`, `docs/c3-device.md` | `docs/engenharia/` |
+| `docs/guia_estilo_escrita.md`, `docs/TCC/guide.md` | `docs/guias/` |
+| seção "Decisões de arquitetura" do `README.md` | `docs/engenharia/decisoes-arquitetura.md` |
+| `hardware/*.py` | `hardware/scripts/` |
+| `training/requirements.txt` | grupo `dev` de `pyproject.toml` |
+
+`main.py` saiu: só imprimia uma saudação e nada o usava.
+
+Os relatórios voltaram a compilar. Os caminhos das imagens supõem uma pasta logo
+abaixo de `docs/`, e as 18 imagens estavam inacessíveis em `docs/local_report/tex/`.
+
+`tools/build-hardware.sh` e `tools/run-all-tests.sh` passaram a usar o ambiente do
+projeto (`uv run`). O `build-hardware.sh` chamava o `python3` do sistema, e o
+`gen_pcb.py` falhava onde ele não tinha numpy.
+
 ## Verificação formal em Lean 4 passa a ser versionada
 
 `experiments/verificacao-lean/`: 76 teoremas que reproduzem por aritmética

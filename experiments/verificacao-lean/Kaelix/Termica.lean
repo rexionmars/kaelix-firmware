@@ -25,7 +25,7 @@
   já é NEGATIVO em 44,7 °C: a raiz está em 33,0 °C, não em 44,8 °C. O valor de
   44,8 °C é o que a iteração de ganho fixo do notebook devolve após 500 passos
   partindo de 55 °C — ela não convergiu. O próprio repositório registra a
-  correção: `hardware/termica.py` grava `fig11_correcao.csv` com as duas
+  correção: `hardware/scripts/termica.py` grava `fig11_correcao.csv` com as duas
   leituras ("500 iterações" 44,841 °C contra "convergido" 33,005 °C), e o
   modelo em elementos finitos do mesmo arquivo dá 34,30 °C. Ver o README.
 -/

@@ -18,6 +18,7 @@ import Part
 from FreeCAD import Vector
 
 AQUI = pathlib.Path(__file__).resolve().parent
+HW = AQUI.parent
 BASE_ALT, FUNDO = 9.0, 8.0
 REB_D, REB_H = 28.4, 3.3
 BOSS_FURO = 2.6
@@ -31,7 +32,7 @@ BOSS_FURO = 2.6
 VAO = {"v1": ((43.0, 43.0), 3.5, 54.0), "v2": ((62.0, 52.0), 2.5, 30.0)}
 
 for v in ("v1", "v2"):
-    d = AQUI / "involucro" / v
+    d = HW / "involucro" / v
     (vx, vy), recuo, boss_alt = VAO[v]
     base = Part.Shape(); base.read(str(d / "base.step"))
     corpo = Part.Shape(); corpo.read(str(d / "corpo.step"))
@@ -55,7 +56,7 @@ for v in ("v1", "v2"):
     tampa.translate(Vector(0, 0, BASE_ALT + boss_alt + FUNDO))
     fechado = junto.fuse(tampa).removeSplitter()
     solidos = junto.Solids
-    saida = AQUI / "fem" / v
+    saida = HW / "fem" / v
     saida.mkdir(parents=True, exist_ok=True)
     alvo = saida / "caminho.step"
     junto.exportStep(str(alvo))

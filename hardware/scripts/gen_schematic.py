@@ -38,7 +38,7 @@ Conectividade por rótulo global: cada pino recebe um toco e um rótulo. O ERC
 valida por nome de net, não por geometria — o que torna a geração robusta e o
 resultado conferível.
 
-Rodar:  python3 hardware/gen_schematic.py
+Rodar:  python3 hardware/scripts/gen_schematic.py
 """
 
 import os
@@ -57,7 +57,7 @@ KLIB = pathlib.Path("/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbol
 # roteamento). Gerar o esquemático em cada uma custa nada e evita que uma
 # versão dependa de arquivo que mora na outra.
 VERSAO = os.environ.get("KAELIX_PCB", "v1")
-OUT = pathlib.Path(__file__).resolve().parent / "pcb" / VERSAO
+OUT = pathlib.Path(__file__).resolve().parents[1] / "pcb" / VERSAO
 ROOT_UUID = "b7c1e2a0-0000-4000-8000-000000000000"
 PROJ = "kaelix"
 
@@ -335,7 +335,7 @@ EXTRAS = [
 # β ≈ 3370 (103AT-2, folha de dados §9.2); o B3950 do RT1 cortaria perto de
 # 39 °C. RT2 é dedicado, na face de cima, sob a célula e longe do U5 — lê a
 # placa, que fica ACIMA da célula durante a carga, então o corte vem cedo,
-# nunca tarde (hardware/termica_carga.py).
+# nunca tarde (hardware/scripts/termica_carga.py).
 #
 # Corrente de carga: 200 mA, R_ISET = K_ISET / I = 540 / 0,2 = 2,7 k. O
 # carregador é linear e dissipa I·(V_USB − V_bat) DENTRO do invólucro; o
@@ -509,7 +509,7 @@ def main():
     # A folga da netclass é 0,15 mm, e não os 0,2 mm herdados: o MPU6050 é um
     # QFN-24 de 0,5 mm de passo e, com 0,2 mm, o obstáculo inflado de um pad
     # cobre a linha de centro do pad vizinho e nenhum escape fecha. A derivação
-    # está em hardware/router.py. 0,15 mm de folga com traço de 0,2 mm está
+    # está em hardware/scripts/router.py. 0,15 mm de folga com traço de 0,2 mm está
     # dentro do processo padrão de duas camadas.
     import json as _json
     _regras = {"min_through_hole_diameter": 0.2,

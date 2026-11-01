@@ -24,7 +24,7 @@
 // pull-ups de 4k7 ficavam em +3V3 e injetavam corrente em SDA/SCL, que
 // entrava pelos diodos de ESD do MPU6050. O corte tem de ser do lado alto
 // e tem de levar os pull-ups junto — é o que o esquemático faz hoje
-// (hardware/gen_schematic.py, bloco "Corte de energia dos periféricos").
+// (hardware/scripts/gen_schematic.py, bloco "Corte de energia dos periféricos").
 //
 // A polaridade ativo-alto que esta função assume não mudou com a troca de
 // topologia, e é por isso que peripherals_power() continua igual.

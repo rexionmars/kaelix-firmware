@@ -6,7 +6,7 @@ ESP32-S3-WROOM-1U, Ai-Thinker Ra-02 ou JST S2B-PH-SM4-TB. Os arquivos desta
 pasta vieram da comunidade e estão AQUI COMO BAIXADOS, sem edição.
 
 As versões alinhadas ficam um nível acima e são geradas por
-`hardware/gen_3dmodels.py`, que aplica a transformação e CONFERE as cotas
+`hardware/scripts/gen_3dmodels.py`, que aplica a transformação e CONFERE as cotas
 contra o footprint. Nenhum arquivo desta pasta é usado direto pela placa.
 
 | arquivo | componente | origem | licença |

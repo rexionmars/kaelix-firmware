@@ -8,7 +8,7 @@
 #
 # Arquétipo: grade quantitativa com painel-herói (a).
 # Uso: Rscript experiments/figures/scripts/fig11_termica3d.R
-#      (dados: uv run --with gmsh --with numpy python hardware/termica.py)
+#      (dados: uv run --with gmsh --with numpy python hardware/scripts/termica.py)
 
 script_dir <- function() {
   a <- commandArgs(trailingOnly = FALSE)

@@ -8,7 +8,7 @@
 #
 # Arquétipo: grade quantitativa com painel-herói (a).
 # Uso: Rscript experiments/figures/scripts/fig9_pdn.R
-#      (dados: uv run --with numpy python hardware/pdn.py)
+#      (dados: uv run --with numpy python hardware/scripts/pdn.py)
 
 script_dir <- function() {
   a <- commandArgs(trailingOnly = FALSE)

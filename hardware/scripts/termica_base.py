@@ -12,6 +12,7 @@ import sys
 import numpy as np
 
 AQUI = pathlib.Path(__file__).resolve().parent
+HW = AQUI.parent
 CCX = pathlib.Path("/Applications/FreeCAD.app/Contents/Resources/bin/ccx")
 
 T_MOTOR = 90.0            # carcaça do motor, °C — a pergunta em discussão

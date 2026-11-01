@@ -7,15 +7,15 @@ completa passa de 200 MB).
 
 ```
 # sólido do caminho de rigidez (base + corpo unidos pelo spigot)
-/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd hardware/fem_caminho.py
+/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd hardware/scripts/fem_caminho.py
 
 # modo próprio da placa, por versão
-KAELIX_PCB=v1 uv run --no-project --with gmsh python hardware/fem_modal.py
-KAELIX_PCB=v2 uv run --no-project --with gmsh python hardware/fem_modal.py
+KAELIX_PCB=v1 uv run --no-project --with gmsh python hardware/scripts/fem_modal.py
+KAELIX_PCB=v2 uv run --no-project --with gmsh python hardware/scripts/fem_modal.py
 
 # modo do caminho de montagem, as duas versões numa rodada
-uv run --no-project --with gmsh python hardware/fem_montagem.py
-KAELIX_MALHA=1.8 uv run --no-project --with gmsh python hardware/fem_montagem.py
+uv run --no-project --with gmsh python hardware/scripts/fem_montagem.py
+KAELIX_MALHA=1.8 uv run --no-project --with gmsh python hardware/scripts/fem_montagem.py
 ```
 
 ## Por que existe
@@ -90,7 +90,7 @@ recomendação de base metálica do notebook permanece de pé.
 ![formas modais](figuras/modos.png)
 
 ```
-uv run --no-project --with numpy --with matplotlib python hardware/fem_figuras.py
+uv run --no-project --with numpy --with matplotlib python hardware/scripts/fem_figuras.py
 ```
 
 O que as formas mostram, e que os números sozinhos não diziam:
@@ -111,7 +111,7 @@ Essa troca é a razão de a v2 não herdar a melhora que a altura menor sugeriri
 
 ## Resultado 3 — vibração aleatória e fadiga de junta (Steinberg)
 
-`hardware/vibracao.py`, figura em `experiments/figures/scripts/fig10_vibracao.R`.
+`hardware/scripts/vibracao.py`, figura em `experiments/figures/scripts/fig10_vibracao.R`.
 
 Excitação da própria norma que o produto usa: ISO 10816-3 classe III, limiar
 C/D = 11,2 mm/s RMS, com os limites importados de
@@ -178,7 +178,7 @@ Sem a correção do chassi, a margem do pior caso varia com Q e com a zona:
 
 ## Resultado 4 — condução do motor até a placa
 
-`hardware/termica.py`, figura em `experiments/figures/scripts/fig11_termica3d.R`.
+`hardware/scripts/termica.py`, figura em `experiments/figures/scripts/fig11_termica3d.R`.
 Invólucro fechado (base + corpo + tampa) em ASA, entrada pelos quatro bolsos
 de ímã presos a 90 °C, convecção natural mais radiação linearizada para 30 °C
 nas faces externas, cavidade adiabática.
@@ -245,7 +245,7 @@ diante da do invólucro e some em série.
 
 ### Durante a carga (placa v3)
 
-`hardware/termica_carga.py`, dados em
+`hardware/scripts/termica_carga.py`, dados em
 `experiments/figures/data/termica_carga.csv`. A cavidade adiabática vale para
 a operação — 2,0 mW médios, centésimos de kelvin — e deixa de valer na carga:
 o BQ21040 da placa v3 é linear e dissipa I·(V_USB − V_bat) dentro do

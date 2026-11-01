@@ -33,7 +33,7 @@ final". Isto aqui é a leitura das cotas publicadas, para conferência e
 simulação — se a peça impressa medir diferente, o certo é a peça.
 
 Rodar:  /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd \\
-            hardware/gen_involucro.py
+            hardware/scripts/gen_involucro.py
 """
 
 import math
@@ -50,7 +50,8 @@ except Exception:
     pass
 
 AQUI = pathlib.Path(__file__).resolve().parent
-SAIDA = AQUI / "involucro"
+HW = AQUI.parent
+SAIDA = HW / "involucro"
 
 # ---------------------------------------------------------------------
 # Cotas — vista 1: CORPO, corte frontal
@@ -231,13 +232,13 @@ def base():
 # ---------------------------------------------------------------------
 ASSENTO_PLACA = 5.0       # acima do fundo da cavidade; sob a placa passa o Ra-02
 FOLGA_BATERIA = 2.0
-ORIGEM3D = AQUI / "3dmodels" / "origem"
+ORIGEM3D = HW / "3dmodels" / "origem"
 # A placa acompanha a versão do invólucro, e não a variável de ambiente: cada
 # cavidade tem a sua. Com KAELIX_PCB decidindo por fora, a v1 do invólucro era
 # conferida contra a placa de 61 x 51 da v2 e acusava 1616 mm3 de interferência
 # — um defeito que não existe, num par que ninguém vai montar.
 def placa_da(versao):
-    return AQUI / "pcb" / versao / "kaelix.step"
+    return HW / "pcb" / versao / "kaelix.step"
 
 
 def substrato(forma):

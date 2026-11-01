@@ -122,7 +122,7 @@ partindo de `T = (80 + 30)/2 = 55 °C`. A iteração caminha na direção certa,
 em 500 passos ainda não chegou à raiz — parou em 44,8 °C a caminho de 33 °C.
 
 Isso não é conjectura. O próprio repositório registra a correção: o bloco final
-de `hardware/termica.py` grava `experiments/figures/data/fig11_correcao.csv`
+de `hardware/scripts/termica.py` grava `experiments/figures/data/fig11_correcao.csv`
 com as duas leituras lado a lado, e para carcaça a 80 °C elas são **44,841 °C
 ("500 iterações")** e **33,005 °C ("convergido")**. O modelo em elementos
 finitos do mesmo arquivo, com o motor a 90 °C, dá **34,30 °C**. O que este

@@ -7,7 +7,7 @@ colorida pelo modulo do deslocamento. Isso o matplotlib faz.
 A escala do deslocamento e ARBITRARIA — autovetor nao tem amplitude fisica.
 Cada figura declara a sua.
 
-    uv run --no-project --with numpy --with matplotlib python hardware/fem_figuras.py
+    uv run --no-project --with numpy --with matplotlib python hardware/scripts/fem_figuras.py
 """
 import collections
 import pathlib
@@ -20,7 +20,8 @@ import matplotlib.pyplot as plt                       # noqa: E402
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection  # noqa: E402
 
 AQUI = pathlib.Path(__file__).resolve().parent
-SAIDA = AQUI / "fem" / "figuras"
+HW = AQUI.parent
+SAIDA = HW / "fem" / "figuras"
 
 # Faces de um C3D10 pelos vertices de canto (a casca so precisa dos cantos;
 # os nos de meio-lado nao mudam a topologia da superficie).
@@ -155,8 +156,8 @@ fig = plt.figure(figsize=(10.5, 11.5))
 fig.patch.set_facecolor("white")
 col = None
 for k, (rot, base, modo, escala, vista) in enumerate(CASOS, 1):
-    frd = AQUI / "fem" / f"{base}.frd"
-    dat = AQUI / "fem" / f"{base}.dat"
+    frd = HW / "fem" / f"{base}.frd"
+    dat = HW / "fem" / f"{base}.dat"
     if not frd.exists():
         raise SystemExit(f"falta {frd} — rode fem_modal.py / fem_montagem.py")
     if modo == "auto":
@@ -303,17 +304,17 @@ CENTRO_PCB = (150.0, 100.0)      # origem do projeto KiCad
 ESCALAS = [((30.0, 90.0), "escala cheia: 30 a 90 °C"),
            ((30.0, 40.0), "escala expandida: 30 a 40 °C")]
 
-if all((AQUI / "fem" / v / "termica_regime.frd").exists() for v, _d, _c in TERM):
+if all((HW / "fem" / v / "termica_regime.frd").exists() for v, _d, _c in TERM):
     dados = []
     for ver, desc, tcav in TERM:
-        nos, elems, campo = le_campo(AQUI / "fem" / ver / "termica_regime.frd")
+        nos, elems, campo = le_campo(HW / "fem" / ver / "termica_regime.frd")
         # Corte no plano central em Y. A face cortada aponta para +y,
         # entao a metade a GUARDAR e a de y menor, com a camera em +y
         # (azim = 62). Guardar a outra mostra o lado de fora da peca.
         el = meia(nos, elems, eixo=1, lado=-1)
         # placa: malha do modal, transladada do referencial do KiCad para o
         # do invólucro e cortada no mesmo plano
-        pl = AQUI / "fem" / ver / "malha.inp"
+        pl = HW / "fem" / ver / "malha.inp"
         pnos, pel = ({}, [])
         if pl.exists():
             bloco = None

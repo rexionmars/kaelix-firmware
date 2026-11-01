@@ -17,7 +17,7 @@ O contorno e os furos NÃO são redigitados aqui: saem do Edge.Cuts e dos
 footprints MountingHole do próprio .kicad_pcb. Se a placa mudar, a simulação
 muda junto.
 
-    KAELIX_PCB=v2 uv run --no-project --with gmsh python hardware/fem_modal.py
+    KAELIX_PCB=v2 uv run --no-project --with gmsh python hardware/scripts/fem_modal.py
 """
 import math
 import os
@@ -26,12 +26,13 @@ import subprocess
 import sys
 
 AQUI = pathlib.Path(__file__).resolve().parent
+HW = AQUI.parent
 sys.path.insert(0, str(AQUI))
 from sexpr import parse, find, find1  # noqa: E402
 
 VERSAO = os.environ.get("KAELIX_PCB", "v1")
-PCB = AQUI / "pcb" / VERSAO / "kaelix.kicad_pcb"
-SAIDA = AQUI / "fem" / VERSAO
+PCB = HW / "pcb" / VERSAO / "kaelix.kicad_pcb"
+SAIDA = HW / "fem" / VERSAO
 CCX = pathlib.Path("/Applications/FreeCAD.app/Contents/Resources/bin/ccx")
 
 # --- material -------------------------------------------------------

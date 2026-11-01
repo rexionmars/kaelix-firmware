@@ -2,7 +2,7 @@
 
 Projeto KiCad versionado por diretório. Cada versão é autocontida
 (`.kicad_sch`, `.kicad_pcb`, `.kicad_pro`, `.kicad_sym`, `sym-lib-table` e
-derivados) e é gerada por `hardware/gen_schematic.py` + `hardware/gen_pcb.py`.
+derivados) e é gerada por `hardware/scripts/gen_schematic.py` + `hardware/scripts/gen_pcb.py`.
 Nenhum arquivo destas pastas é editado à mão.
 
 ```
@@ -74,7 +74,7 @@ tornaria impossível atribuir qualquer diferença de comportamento medido.
 Circuito, pela primeira vez desde a v1: a placa passa a **carregar a
 bateria**. Até a v2 não havia CI carregador nem conector de entrada — o
 invólucro tinha o furo de USB-C, os relatórios falavam em "recarga por USB-C",
-e a netlist não. Fonte: bloco `COM_CARGA` em `hardware/gen_schematic.py`.
+e a netlist não. Fonte: bloco `COM_CARGA` em `hardware/scripts/gen_schematic.py`.
 
 | Peça | Função | Por quê |
 |---|---|---|
@@ -89,7 +89,7 @@ O limite de 45 °C que a análise térmica usa deixa de ser recomendação da
 folha de dados da célula e passa a ser **imposto pelo hardware**.
 
 **Corrente de carga, do modelo térmico.** O BQ21040 é linear e dissipa
-I·(V_USB − V_bat) dentro do invólucro fechado. `hardware/termica_carga.py`
+I·(V_USB − V_bat) dentro do invólucro fechado. `hardware/scripts/termica_carga.py`
 roda o FEM de `termica.py` com essa fonte interna: a placa sobe
 **~15 K por watt**. Pior ponto da corrente constante (V_bat = 3,0 V), V_USB =
 5,0 V, ambiente 30 °C. Com o motor a 90 °C a placa fica entre a média da
@@ -111,7 +111,7 @@ não falha. O procedimento recomendado é carregar fora do motor ou com ele
 parado. Tudo isto é modelo, não medição, e a folga do motor quente é
 otimista: a resistência interna herdada usa o h externo, e a convecção dentro
 da cavidade é mais fraca. Ali a folga real pode ser nula. Hipóteses em
-`hardware/termica_carga.py` e `hardware/fem/README.md`.
+`hardware/scripts/termica_carga.py` e `hardware/fem/README.md`.
 
 **Placement.** J3 na borda −X, alinhado ao furo do invólucro; U5 e os passivos
 na face de baixo, sob o J3. RT2 na face de cima, sob a célula e longe do U5. O
@@ -158,7 +158,7 @@ pads, a linha "PCB Edge" do footprint tem de cair na borda (desvio medido
 |---|---|---|---|---|
 | 16 | Desacoplamento acima de 3 mm do pino, em linha reta | 6 de 6, pior 11,08 mm | 2 de 6, pior 4,47 mm | Restam C8 (4,47) e C3 (3,30). C8 é o segundo capacitor de um **único** pino de +3V3 do Ra-02: em 0805 não há terceira posição |
 | 16a | A métrica contava quatro capacitores que não desacoplam nada | lista antiga: C1, C5, C6, C9 | idem | C1 é o RC do EN, C5 e C6 são o regulador interno e a bomba de carga do MPU6050 (exigência de folha de dados, não de PDN) e C9 é a entrada do LDO. `_DESACOPLA` corrigido para C2, C3, C4, C7, C8, C10 |
-| 16b | **A régua mede a reta; o laço vê a pista.** Numa placa de 2 camadas o retorno está a 1,5 mm, o que dá 781 pH/mm de pista e 1,30 nH por via passante | C8: 11,1 mm em reta contra **36,1 mm de pista e 6 vias** → 35,9 nH (3,25×) | pior caso C3: 6,4 mm de pista e 2 vias → 7,59 nH | A distância euclidiana subestimava a indutância por até 3,25×. Ver `hardware/pdn.py` e a figura 9 |
+| 16b | **A régua mede a reta; o laço vê a pista.** Numa placa de 2 camadas o retorno está a 1,5 mm, o que dá 781 pH/mm de pista e 1,30 nH por via passante | C8: 11,1 mm em reta contra **36,1 mm de pista e 6 vias** → 35,9 nH (3,25×) | pior caso C3: 6,4 mm de pista e 2 vias → 7,59 nH | A distância euclidiana subestimava a indutância por até 3,25×. Ver `hardware/scripts/pdn.py` e a figura 9 |
 | 16c | **A v2 aproximou os capacitores e piorou o PDN.** O roteador pôs 2 vias no caminho do capacitor de bulk do ESP32-S3 | Z abaixo do alvo de 733 mΩ em toda a faixa | passa do alvo acima de **6,0 MHz** (ESP32-S3) e de **1,1 MHz** (MPU6050) | Ganho de placement em linha reta não se traduziu em ganho elétrico. Corrigir pede fixar o caminho do bulk na mesma face, sem via |
 | 17 | Cinco pads de sinal do WROOM-1U a 1,27 mm de passo não comportam seis discretos a 3 mm | — | — | 0805 em pé pede 3,5 mm de passo. Limite de encapsulamento, não de área |
 | 18 | Corredor do cabo | 4,0 mm | 6,0 mm | A v1 não aceita os ~6 mm que um alojamento PHR-2 com chicote pede |

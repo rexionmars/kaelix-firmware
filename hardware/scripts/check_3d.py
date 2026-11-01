@@ -10,7 +10,7 @@ quatro componentes mais altos não estavam nele.
 Aqui o arquivo é aberto por um kernel de CAD, que resolve as transformações.
 
 Rodar:  /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd \\
-            hardware/check_3d.py
+            hardware/scripts/check_3d.py
 """
 
 import os
@@ -25,11 +25,12 @@ except Exception:
     pass
 
 AQUI = pathlib.Path(__file__).resolve().parent
+HW = AQUI.parent
 sys.path.insert(0, str(AQUI))
 from sexpr import parse, find, find1  # noqa: E402
 
 VERSAO = os.environ.get("KAELIX_PCB", "v1")
-PROJ = AQUI / "pcb" / VERSAO
+PROJ = HW / "pcb" / VERSAO
 CAMINHO = PROJ / "kaelix.step"
 DIR3D = pathlib.Path("/Applications/KiCad/KiCad.app/Contents/SharedSupport/3dmodels")
 

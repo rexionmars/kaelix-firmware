@@ -18,7 +18,7 @@ mede a coisa errada com precisão.
 A versão quantitativa é a da indústria: montar Z(f) vista do pino de
 alimentação de cada carga e comparar com uma impedância-alvo.
 
-    uv run --no-project --with numpy --with matplotlib python hardware/pdn.py
+    uv run --no-project --with numpy --with matplotlib python hardware/scripts/pdn.py
 """
 import heapq
 import math
@@ -29,6 +29,7 @@ import sys
 import numpy as np
 
 AQUI = pathlib.Path(__file__).resolve().parent
+HW = AQUI.parent
 sys.path.insert(0, str(AQUI))
 from sexpr import parse, find, find1  # noqa: E402
 
@@ -252,7 +253,7 @@ AREA = {"v1": 1466.0, "v2": 2950.0}          # de fem_modal.py
 
 RESULTADO, CAPS = {}, {}
 for ver in VERSOES:
-    pcb = AQUI / "pcb" / ver / "kaelix.kicad_pcb"
+    pcb = HW / "pcb" / ver / "kaelix.kicad_pcb"
     nets, segs, vias, _ = le_placa(pcb)
     num_da_rede = {nome: n for n, nome in nets.items()}
     pads = pads_do_gerador(ver)
@@ -346,7 +347,7 @@ for ver in VERSOES:
 # (experiments/figures/scripts/*.R), e o que sai daqui é a fonte de dados.
 import csv                                             # noqa: E402
 
-DADOS = AQUI.parent / "experiments" / "figures" / "data"
+DADOS = HW.parent / "experiments" / "figures" / "data"
 DADOS.mkdir(parents=True, exist_ok=True)
 
 with (DADOS / "fig9_pdn_impedancia.csv").open("w", newline="") as fh:

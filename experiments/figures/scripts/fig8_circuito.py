@@ -23,7 +23,7 @@ from pypdf import PdfReader, PdfWriter
 
 RAIZ = pathlib.Path(__file__).resolve().parents[3]
 os.environ['KAELIX_PCB'] = 'v3'
-sys.path.insert(0, str(RAIZ / 'hardware'))
+sys.path.insert(0, str(RAIZ / 'hardware/scripts'))
 import gen_schematic as SCH
 from sexpr import sym, st, dump, head, find1
 

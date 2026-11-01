@@ -29,7 +29,7 @@ Este script confere o que está em disco. Se um modelo sumir ou trocar de
 tamanho, a compilação para aqui, e não no dia em que alguém abrir o STEP.
 
 Rodar:  /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd \\
-            hardware/gen_3dmodels.py
+            hardware/scripts/gen_3dmodels.py
 """
 
 import pathlib
@@ -45,11 +45,12 @@ except Exception:
     pass
 
 AQUI = pathlib.Path(__file__).resolve().parent
+HW = AQUI.parent
 sys.path.insert(0, str(AQUI))
 from sexpr import parse, find, find1, head  # noqa: E402
 
 FPLIB = pathlib.Path("/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints")
-ORIGEM = AQUI / "3dmodels" / "origem"
+ORIGEM = HW / "3dmodels" / "origem"
 
 # arquivo -> (footprint que ele veste, giro aplicado pelo KiCad, procedência)
 #

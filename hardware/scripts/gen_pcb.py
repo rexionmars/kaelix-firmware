@@ -45,7 +45,7 @@ capacitor fica na MESMA face do seu CI, no anel livre em volta dele:
     livre em cima  ~900 mm²      livre embaixo  ~660 mm²
     ocupado        ~35 mm²                      ~170 mm²
 
-Rodar:  python3 hardware/gen_pcb.py
+Rodar:  python3 hardware/scripts/gen_pcb.py
 """
 
 import math
@@ -55,9 +55,10 @@ import sys
 import uuid as _uuid
 
 AQUI = pathlib.Path(__file__).resolve().parent
+HW = AQUI.parent
 sys.path.insert(0, str(AQUI))
 VERSAO = os.environ.get("KAELIX_PCB", "v1")
-PROJ = AQUI / "pcb" / VERSAO          # projeto KiCad desta versão
+PROJ = HW / "pcb" / VERSAO          # projeto KiCad desta versão
 from sexpr import parse, dump, head, find, find1, sym, st  # noqa: E402
 import gen_schematic as SCH  # noqa: E402
 
@@ -902,7 +903,7 @@ corpo = [[sym("net"), sym(str(i)), st(n)] for n, i in sorted(NETNUM.items(), key
 # quando alguém abre esse arquivo para conferir encaixe no invólucro.
 #
 # Dois ganham substituto honesto (mesmo envelope, diferença fora do que
-# importa); dois são modelados em hardware/gen_3dmodels.py a partir do
+# importa); dois são modelados em hardware/scripts/gen_3dmodels.py a partir do
 # contorno do próprio footprint. A verificação no fim deste arquivo garante
 # que nenhum footprint volte a ficar sem corpo em silêncio.
 MODELOS_3D = {
@@ -1229,7 +1230,7 @@ else:
 #
 # E a distância medida aqui é EUCLIDIANA. O que entra na indutância do laço é
 # o comprimento da PISTA, que numa placa de duas camadas diverge — no C8 da
-# v1, por 3,25x. Ver hardware/pdn.py e a figura 9.
+# v1, por 3,25x. Ver hardware/scripts/pdn.py e a figura 9.
 _DESACOPLA = ("C2", "C3", "C4", "C7", "C8", "C10")
 _longe = []
 for _r, (_a, _pd, _dx, _dy, _rt, _ld) in PREFERENCIAS.items():

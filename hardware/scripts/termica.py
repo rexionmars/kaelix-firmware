@@ -15,7 +15,7 @@ duas passaram a ser calculáveis quando os sólidos apareceram:
 Unidades de CalculiX: mm, t, s, mW, °C. Nelas a condutividade tem o mesmo
 valor numérico que em W/(m·K).
 
-    uv run --no-project --with gmsh --with numpy python hardware/termica.py
+    uv run --no-project --with gmsh --with numpy python hardware/scripts/termica.py
 """
 import math
 import pathlib
@@ -38,10 +38,10 @@ print("entrada pelos quatro bolsos de ímã; cavidade adiabática; "
 
 RES = {}
 for ver in ("v1", "v2"):
-    saida = AQUI / "fem" / ver
+    saida = HW / "fem" / ver
     step = saida / "involucro.step"
     if not step.exists():
-        raise SystemExit(f"falta {step} — rode hardware/fem_caminho.py "
+        raise SystemExit(f"falta {step} — rode hardware/scripts/fem_caminho.py "
                          f"no freecadcmd")
     inp = saida / "termica_malha.inp"
     nn = malha(step, inp)
@@ -108,7 +108,7 @@ PASSO, TOTAL = 60.0, 14400.0        # 4 h em passos de 1 min
 print("transiente: degrau de 30 para 90 °C na carcaça, em t = 0\n")
 for ver in ("v1", "v2"):
     r = RES[ver]
-    saida = AQUI / "fem" / ver
+    saida = HW / "fem" / ver
     d = saida / "termica_transiente.inp"
     escreve(r["inp"], d, r["nos_ima"], r["ext"], r["h"] * 1e-3, r["n_max"],
             transiente=(PASSO, TOTAL))
@@ -171,7 +171,7 @@ sys.stdout.flush()
 # ---------------------------------------------------------------------
 import csv                                                  # noqa: E402
 
-DADOS = AQUI.parent / "experiments" / "figures" / "data"
+DADOS = HW.parent / "experiments" / "figures" / "data"
 DADOS.mkdir(parents=True, exist_ok=True)
 
 with (DADOS / "fig11_perfil.csv").open("w", newline="") as fh:

@@ -260,6 +260,7 @@ kaelix-firmware/
 │   ├── gateway/          # simulador do gateway e seus testes
 │   └── verificacao-lean/ # verificação formal em Lean 4
 └── hardware/           # placas, invólucro e análises (trabalho futuro no TCC)
+    ├── scripts/          # geradores e análises; o que está nas outras pastas sai deles
     ├── pcb/              # versões v1 a v3
     ├── involucro/        # versões v1 a v3
     ├── fem/              # elementos finitos (malhas fora do git)

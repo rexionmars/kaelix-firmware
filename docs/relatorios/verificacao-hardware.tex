@@ -66,7 +66,7 @@
 
 \section{Cadeia de geração e verificação}
 
-Nenhum arquivo derivado é editado à mão. A fonte é \texttt{hardware/gen\_schematic.py}.
+Nenhum arquivo derivado é editado à mão. A fonte é \texttt{hardware/scripts/gen\_schematic.py}.
 
 \begin{table}[H]\footnotesize
 \begin{tabularx}{\textwidth}{@{}Y{0.7} Y{1.0} Y{1.3} Y{1.0}@{}}
@@ -252,7 +252,7 @@ IO7 $\leftarrow$ CHG\_N & estado da carga para o firmware & GPIO de RTC; nenhum 
 
 Verificação: ERC com 0 violações; DRC com 0 violação de regra e 0 item solto; nenhuma interferência entre 116 corpos; placa contra corpo do invólucro v3 com \SI{0.0}{\milli\meter\cubed}, com o nariz do USB-C passando pelo furo. 637 segmentos (488 / 150), 108 vias de sinal e 220 de costura, triedro M2 a \SI{120}{\degree} com 181 ângulos legais. Modal, PDN e vibração não foram recalculados para a v3.
 
-O carregador é linear e dissipa $I\,(V_\text{USB}-V_\text{bat})$ dentro do invólucro fechado. \arq{hardware/termica\_carga.py} aplica essa potência ao modelo térmico da Seção~\ref{sec:termica}: a placa sobe cerca de \SI{15}{\kelvin} por watt. No pior ponto da corrente constante, a \SI{200}{\milli\ampere} e \SI{0.41}{\watt}:
+O carregador é linear e dissipa $I\,(V_\text{USB}-V_\text{bat})$ dentro do invólucro fechado. \arq{hardware/scripts/termica\_carga.py} aplica essa potência ao modelo térmico da Seção~\ref{sec:termica}: a placa sobe cerca de \SI{15}{\kelvin} por watt. No pior ponto da corrente constante, a \SI{200}{\milli\ampere} e \SI{0.41}{\watt}:
 
 \begin{table}[H]\footnotesize
 \begin{tabularx}{\textwidth}{@{}Y{1.2} Y{0.9} Y{0.9}@{}}

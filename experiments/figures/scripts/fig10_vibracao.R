@@ -9,7 +9,7 @@
 #
 # Arquétipo: grade quantitativa com painel-herói (a).
 # Uso: Rscript experiments/figures/scripts/fig10_vibracao.R
-#      (dados: uv run --with numpy python hardware/vibracao.py)
+#      (dados: uv run --with numpy python hardware/scripts/vibracao.py)
 
 script_dir <- function() {
   a <- commandArgs(trailingOnly = FALSE)

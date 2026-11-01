@@ -27,7 +27,7 @@ Três cenários:
   motor frio    preso ao motor parado, carcaça na temperatura ambiente
   motor quente  preso ao motor em operação, carcaça a 90 °C
 
-    uv run --no-project --with gmsh --with numpy python hardware/termica_carga.py
+    uv run --no-project --with gmsh --with numpy python hardware/scripts/termica_carga.py
 """
 import csv
 import pathlib
@@ -36,7 +36,7 @@ import sys
 import numpy as np
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from termica_base import (AQUI, T_AMB, T_MOTOR, FACES_TET, DENTRO,  # noqa: E402
+from termica_base import (HW, T_AMB, T_MOTOR, FACES_TET, DENTRO,  # noqa: E402
                           h_externo, malha, le_inp, contorno, classifica,
                           escreve, roda, le_temperaturas)
 
@@ -62,7 +62,7 @@ def area_tri(a, b, c):
     return 0.5 * float(np.linalg.norm(np.cross(np.subtract(b, a), np.subtract(c, a))))
 
 
-saida = AQUI / "fem" / VER
+saida = HW / "fem" / VER
 inp = saida / "termica_malha.inp"
 if not inp.exists():
     malha(saida / "involucro.step", inp)
@@ -142,7 +142,7 @@ for i_ma in (100, 150, 200, 250, 300, 500):
     tabela.append((i_ma, riset, p30, p37, temps["bancada"], temps["motor frio"],
                    temps["motor quente"], t_rad, horas))
 
-dados = AQUI.parent / "experiments" / "figures" / "data" / "termica_carga.csv"
+dados = HW.parent / "experiments" / "figures" / "data" / "termica_carga.csv"
 with dados.open("w", newline="") as fh:
     w = csv.writer(fh, lineterminator="\n")
     w.writerow(["cenario", "p_w", "t_parede", "r_int_kw", "t_placa",
