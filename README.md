@@ -610,11 +610,11 @@ Nenhuma cobre a camada `src/`, que depende de `pio run -e esp32-s3`.
 ## Pipeline de treino
 
 ```bash
+uv sync                                   # ambiente único, definido em pyproject.toml
 cd training
-pip install -r requirements.txt
-python -m pytest tests/            # 35 testes, inclui compilação real com g++
-python -m kaelix_ml.ingest --all   # baixa o MAFAULDA e cacheia (~12GB -> 32MB)
-python -m kaelix_ml.train          # treina e exporta o header C++
+uv run python -m pytest tests/            # 35 testes, inclui compilação real com g++
+uv run python -m kaelix_ml.ingest --all   # baixa o MAFAULDA e cacheia (~12GB -> 32MB)
+uv run python -m kaelix_ml.train          # treina e exporta o header C++
 ```
 
 `ingest` processa uma classe por vez e apaga os CSVs após cachear, então o

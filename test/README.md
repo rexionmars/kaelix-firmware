@@ -11,4 +11,4 @@ aceleração em g e garante que janelas congeladas/não finitas não publiquem
 features. Esses testes não validam o I2C/FIFO na placa.
 
 Os testes do pipeline Python de treino ficam em `training/tests/`
-(`python -m pytest tests/`).
+(`uv run python -m pytest tests/`).

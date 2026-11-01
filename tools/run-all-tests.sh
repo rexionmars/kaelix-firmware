@@ -11,7 +11,7 @@ cd "$RAIZ"
 
 falhas=0
 secao() { printf '\n\033[1m== %s ==\033[0m\n' "$1"; }
-py() { uv run --no-project --with numpy --with scipy --with scikit-learn --with pytest python "$@"; }
+py() { uv run python "$@"; }
 
 secao "firmware — lib/ (Unity, host)"
 if ! ./tools/run-native-tests.sh; then falhas=$((falhas+1)); fi
