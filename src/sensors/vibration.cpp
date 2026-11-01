@@ -8,6 +8,7 @@
 
 #if defined(ARDUINO)
 #include <Arduino.h>
+#include "../device_pins.h"
 #include "../serial_log.h"
 #include <Wire.h>
 #include <esp_timer.h>
@@ -94,7 +95,8 @@ kaelix::Status vibration_init() {
 
 #if defined(ARDUINO)
     if (!s_i2c_started) {
-        if (!Wire.begin(8, 9, 400000U)) return kaelix::Status::BusSilent;
+        if (!Wire.begin(kaelix::device::MPU_SDA, kaelix::device::MPU_SCL, 400000U))
+            return kaelix::Status::BusSilent;
         Wire.setTimeOut(20);
         s_i2c_started = true;
     }

@@ -11,6 +11,7 @@
 #include "kaelix_status.h"
 
 #include <Arduino.h>
+#include "device_pins.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -440,6 +441,11 @@ void loop() {
 void setup() {
     Serial.begin(115200);
     delay(1000);
+    kaelix::logging::log("kaelix", "INFO", "BOOT",
+        "device=%s MPU SDA=%u SCL=%u LoRa SCK=%u MISO=%u MOSI=%u CS=%u RST=%u DIO0=%u",
+        kaelix::device::BOARD_NAME, kaelix::device::MPU_SDA, kaelix::device::MPU_SCL,
+        kaelix::device::LORA_SCK, kaelix::device::LORA_MISO, kaelix::device::LORA_MOSI,
+        kaelix::device::LORA_CS, kaelix::device::LORA_RST, kaelix::device::LORA_DIO0);
     kaelix::logging::log("kaelix", "INFO", "BOOT", "BENCH NTC=off power=direct axis=Z unit=g model=unvalidated");
     log_phase("wdt", kpower::watchdog_arm_active_phase());
 }

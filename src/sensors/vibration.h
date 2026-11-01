@@ -39,7 +39,8 @@ struct VibrationFeatures {
 };
 
 // Inicializa MPU6050 (ID 0x68) ou MPU6515 (ID 0x74) via I2C no endereço
-// 0x68, SDA=8/SCL=9, +/-4 g, DLPF 184 Hz. Perfis possuem FIFOs distintos.
+// 0x68, pinagem em device_pins.h, +/-4 g, DLPF 184 Hz.
+// Perfis possuem FIFOs distintos.
 [[nodiscard]] kaelix::Status vibration_init();
 
 // Preenche `dst` com `n` amostras do eixo Z em g, sem a média da janela, e escreve em

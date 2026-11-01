@@ -10,6 +10,7 @@
 #include "../serial_log.h"
 #include <RadioLib.h>
 #include <SPI.h>
+#include "../device_pins.h"
 
 #include <cstdint>
 
@@ -19,9 +20,9 @@
 namespace kaelix::comms {
 namespace {
 
-constexpr int8_t LORA_CS_PIN = 10;   // NSS (SPI SS padrão do esp32-s3-devkitc-1)
-constexpr int8_t LORA_DIO0_PIN = 14; // DIO0 (IRQ) — não usar 8/9 (I2C do MPU6050)
-constexpr int8_t LORA_RST_PIN = 21;  // RESET — não usar 8/9 (I2C do MPU6050)
+constexpr int8_t LORA_CS_PIN = kaelix::device::LORA_CS;
+constexpr int8_t LORA_DIO0_PIN = kaelix::device::LORA_DIO0;
+constexpr int8_t LORA_RST_PIN = kaelix::device::LORA_RST;
 #if defined(KAELIX_BENCH) && KAELIX_BENCH
 constexpr uint32_t LORA_SPI_HZ = 100000U;
 constexpr int8_t LORA_TX_POWER_DBM = 2; // bancada: reduzir o pico de corrente
@@ -189,7 +190,8 @@ kaelix::Status lora_init() {
     s_initialized = false;
 
     if (!s_spi_started) {
-        SPI.begin(12, 13, 11, LORA_CS_PIN);
+        SPI.begin(kaelix::device::LORA_SCK, kaelix::device::LORA_MISO,
+                  kaelix::device::LORA_MOSI, LORA_CS_PIN);
         if (SPI.bus() == nullptr) return kaelix::Status::RadioBusSilent;
         s_spi_started = true;
     }

@@ -5,11 +5,15 @@ vibração e temperatura, roda um modelo de detecção de anomalias embarcado
 (TinyML) e transmite o resultado via LoRa. TCC de Engenharia de Software
 (ICEV), inspirado na arquitetura do TRACTIAN Smart Trac.
 
-O ESP32-S3, o MPU6050 e o RA-02 estão disponíveis e foram conectados
-em bancada. O NTC e o circuito de alimentação final ainda não estão montados.
-A aquisição real foi implementada; a validação na placa ainda está pendente.
+## Montagem atual: C3 como device
 
-## Teste da montagem atual (USB, sem NTC)
+A inversão de papéis começa pelo **ESP32-C3 Super Mini como transmissor**,
+com MPU e RA-02. Use `esp32-c3-device`, conforme
+[ligações e operação](docs/c3-device.md). O S3 será migrado para gateway
+em uma etapa posterior. O NTC e o circuito de alimentação final ainda não
+estão montados. As instruções de S3 abaixo descrevem a montagem anterior.
+
+## Montagem anterior: S3 transmissor (USB, sem NTC)
 
 Use o ambiente **`esp32-s3-bench`** para esta montagem:
 
